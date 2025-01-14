@@ -11,30 +11,34 @@ const THEMES = [
 ]
 
 export function Sidebar({ drafts = [], onSaveDraft, onDeleteDraft, theme, onThemeChange }) {
+  const handleThemeChange = (e) => {
+    e.target.blur() // 强制失去焦点，关闭下拉框
+    onThemeChange(e.target.value)
+  }
+
   return (
     <div className="w-64 flex-none border-r bg-gray-50">
       <div className="h-full flex flex-col">
         {/* 主题选择 */}
         <div className="flex-none p-4 border-b">
-          <div className="dropdown w-full">
-            <label tabIndex={0} className="btn btn-ghost w-full justify-between">
-              <div className="flex items-center gap-2">
+          <div className="form-control w-full">
+            <label className="label cursor-pointer">
+              <span className="label-text flex items-center gap-2">
                 <Settings className="w-4 h-4" />
-                <span>{THEMES.find(t => t.id === theme)?.name || '选择主题'}</span>
-              </div>
+                主题样式
+              </span>
             </label>
-            <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+            <select 
+              className="select select-bordered w-full"
+              value={theme}
+              onChange={handleThemeChange}
+            >
               {THEMES.map(t => (
-                <li key={t.id}>
-                  <a 
-                    className={theme === t.id ? 'active' : ''} 
-                    onClick={() => onThemeChange(t.id)}
-                  >
-                    {t.name}
-                  </a>
-                </li>
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
               ))}
-            </ul>
+            </select>
           </div>
         </div>
 
