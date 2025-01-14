@@ -55,7 +55,7 @@ export default function Home() {
               className="flex gap-4 justify-center"
               variants={fadeInUp}
             >
-              <a href="/editor/new" className="px-8 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full font-medium transition-all shadow-lg hover:shadow-xl">
+              <a href="/editor" className="px-8 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-full font-medium transition-all shadow-lg hover:shadow-xl">
                 开始创作
               </a>
               <a href="/guide" className="px-8 py-3 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium transition-colors">

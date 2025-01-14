@@ -1,70 +1,76 @@
 'use client'
-import { useState, useEffect } from 'react';
-import { Sidebar } from '../components/editor/Sidebar';
-import { Editor } from '../components/editor/Editor';
-import { Preview } from '../components/editor/Preview';
-import { useDraft } from '../hooks/use-draft';
+
+import { useState } from 'react'
+import { Sidebar } from '../components/editor/Sidebar'
+import { Editor } from '../components/editor/Editor'
+import { useDrafts } from '../hooks/useDrafts'
 
 export default function EditorPage() {
-  const [content, setContent] = useState('');
-  const [selectedTheme, setSelectedTheme] = useState('default');
-  const { saveDraft, loadDrafts } = useDraft();
-
-  // 加载草稿
-  useEffect(() => {
-    const drafts = loadDrafts();
-    if (drafts.length > 0) {
-      // 加载最新的草稿
-      setContent(drafts[0].content);
-    }
-  }, []);
-
-  const handleContentChange = (newContent) => {
-    setContent(newContent);
-  };
-
-  const handleThemeChange = (theme) => {
-    setSelectedTheme(theme);
-  };
+  const [content, setContent] = useState('')
+  const [title, setTitle] = useState('')
+  const { drafts, saveDraft, deleteDraft } = useDrafts()
+  const [currentTheme, setCurrentTheme] = useState('wechat-elegant')
 
   const handleSaveDraft = async () => {
-    await saveDraft(content);
-  };
-
-  const handlePublish = async (shouldPublish = false) => {
-    // TODO: 实现发布逻辑
-    console.log('Publishing...', { content, shouldPublish });
-  };
-
-  const handleSelectTemplate = (templateContent) => {
-    if (content && !window.confirm('当前内容将被替换，是否继续？')) {
-      return;
+    if (!content?.trim()) {
+      alert('请先输入内容后再保存')
+      return
     }
-    setContent(templateContent);
-  };
+    try {
+      await saveDraft({
+        title: title || '未命名草稿',
+        content,
+      })
+    } catch (error) {
+      alert('保存草稿失败')
+    }
+  }
+
+  const handleDeleteDraft = async (id) => {
+    try {
+      await deleteDraft(id)
+    } catch (error) {
+      alert('删除草稿失败')
+    }
+  }
+
+  const handleLoadDraft = (draft) => {
+    setTitle(draft.title)
+    setContent(draft.content)
+  }
+
+  const handlePublish = () => {
+    if (!content?.trim()) {
+      alert('请先输入内容后再发布')
+      return
+    }
+    // TODO: 实现发布逻辑
+  }
 
   return (
-    <div className="flex h-screen pt-16">
-      {/* 左侧功能区 */}
-      <Sidebar 
-        selectedTheme={selectedTheme}
-        onThemeChange={handleThemeChange}
-        onSaveDraft={handleSaveDraft}
-        onPublish={handlePublish}
-        onSelectTemplate={handleSelectTemplate}
-      />
+    <div className="min-h-screen pt-16">
+      <div className="h-[calc(100vh-4rem)] flex">
+        {/* 左侧功能区 */}
+        <Sidebar
+          onSave={handleSaveDraft}
+          onPublish={handlePublish}
+          onLoadDraft={handleLoadDraft}
+          onDeleteDraft={handleDeleteDraft}
+          currentTheme={currentTheme}
+          onThemeChange={setCurrentTheme}
+          title={title}
+          content={content}
+        />
 
-      {/* 中间编辑区 */}
-      <Editor 
-        content={content}
-        onChange={handleContentChange}
-      />
-
-      {/* 右侧预览区 */}
-      <Preview 
-        content={content}
-        theme={selectedTheme}
-      />
+        {/* 编辑器主体 */}
+        <Editor
+          title={title}
+          content={content}
+          onTitleChange={setTitle}
+          onContentChange={setContent}
+          theme={currentTheme}
+        />
+      </div>
     </div>
-  );
+  )
 } 
