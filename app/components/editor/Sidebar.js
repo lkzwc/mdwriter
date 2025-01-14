@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Save, Send, FileText, Settings, ChevronDown, Palette, Sparkles, Book, Layout, Briefcase, Upload } from 'lucide-react'
+import { Save, Send, FileText, Settings, ChevronDown, Palette, Sparkles, Book, Layout, Briefcase, Upload, Trash2 } from 'lucide-react'
 
 const THEMES = [
   { id: 'wechat-elegant', name: '微信典雅', icon: Palette },
@@ -14,10 +14,34 @@ const THEMES = [
 export function Sidebar({ drafts, onSaveDraft, onDeleteDraft, onLoadDraft, theme, onThemeChange }) {
   const [selectedDraft, setSelectedDraft] = useState(null)
   const [isThemeOpen, setIsThemeOpen] = useState(false)
+  const [draftToDelete, setDraftToDelete] = useState(null)
 
   const handleDraftClick = (draft) => {
     setSelectedDraft(draft)
     document.getElementById('draft-modal').showModal()
+  }
+
+  const handleDeleteClick = (e, draft) => {
+    e.stopPropagation()
+    setDraftToDelete(draft)
+    document.getElementById('delete-modal').showModal()
+  }
+
+  const handleConfirmDelete = async () => {
+    if (draftToDelete) {
+      try {
+        await onDeleteDraft(draftToDelete.id)
+        setDraftToDelete(null)
+        document.getElementById('delete-modal').close()
+      } catch (error) {
+        alert('删除草稿失败：' + error.message)
+      }
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setDraftToDelete(null)
+    document.getElementById('delete-modal').close()
   }
 
   const handleConfirmLoad = () => {
@@ -98,18 +122,15 @@ export function Sidebar({ drafts, onSaveDraft, onDeleteDraft, onLoadDraft, theme
             {drafts.map((draft, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-2 rounded bg-base-100 hover:bg-base-300 cursor-pointer"
+                className="flex items-center justify-between p-2 rounded bg-base-100 hover:bg-base-300 cursor-pointer group"
                 onClick={() => handleDraftClick(draft)}
               >
                 <div className="truncate flex-1">{draft.title || '无标题文档'}</div>
                 <button
-                  className="btn btn-ghost btn-xs"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDeleteDraft(draft)
-                  }}
+                  className="btn btn-ghost btn-xs opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500"
+                  onClick={(e) => handleDeleteClick(e, draft)}
                 >
-                  删除
+                  <Trash2 size={14} />
                 </button>
               </div>
             ))}
@@ -135,6 +156,24 @@ export function Sidebar({ drafts, onSaveDraft, onDeleteDraft, onLoadDraft, theme
           发布文章
         </button>
       </div>
+
+      {/* 删除草稿确认对话框 */}
+      <dialog id="delete-modal" className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg text-red-500">删除草稿</h3>
+          <p className="py-4">确定要删除"{draftToDelete?.title || '无标题文档'}"吗？此操作不可恢复。</p>
+          <div className="modal-action">
+            <button className="btn" onClick={handleCancelDelete}>取消</button>
+            <button className="btn bg-red-500 hover:bg-red-600 text-white border-none" onClick={handleConfirmDelete}>
+              <Trash2 size={14} className="mr-1" />
+              确认删除
+            </button>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={handleCancelDelete}>关闭</button>
+        </form>
+      </dialog>
 
       {/* 加载草稿确认对话框 */}
       <dialog id="draft-modal" className="modal">

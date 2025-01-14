@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Editor } from '@/app/components/editor/Editor'
-import { Sidebar } from '@/app/components/editor/Sidebar'
-import { useDrafts } from '@/app/hooks/useDrafts'
+import { Editor } from '@/components/editor/Editor'
+import { Sidebar } from '@/components/editor/Sidebar'
+import { useDrafts } from '@/hooks/useDrafts'
 
 export default function EditorPage() {
   const [title, setTitle] = useState('')
@@ -11,21 +11,36 @@ export default function EditorPage() {
   const [theme, setTheme] = useState('wechat-elegant')
   const { drafts, saveDraft, deleteDraft } = useDrafts()
 
+  const handleSaveDraft = async () => {
+    try {
+      await saveDraft({
+        title,
+        content
+      })
+    } catch (error) {
+      alert(error.message)
+    }
+  }
+
   const handleLoadDraft = (draft) => {
     setTitle(draft.title)
     setContent(draft.content)
   }
 
-  const handleSaveDraft = () => {
-    saveDraft({ title, content })
+  const handleDeleteDraft = async (draftId) => {
+    try {
+      await deleteDraft(draftId)
+    } catch (error) {
+      alert('删除草稿失败：' + error.message)
+    }
   }
 
   return (
-    <div className="fixed inset-0 flex">
-      <Sidebar 
+    <div className="flex h-screen">
+      <Sidebar
         drafts={drafts}
         onSaveDraft={handleSaveDraft}
-        onDeleteDraft={deleteDraft}
+        onDeleteDraft={handleDeleteDraft}
         onLoadDraft={handleLoadDraft}
         theme={theme}
         onThemeChange={setTheme}
