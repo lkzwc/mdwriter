@@ -15,30 +15,27 @@ const Preview = dynamic(() => import('./Preview'), {
 
 export function Editor({ title, content, theme, onTitleChange, onContentChange }) {
   return (
-    <div className="flex flex-1 h-full overflow-hidden">
-      <div className="flex flex-col flex-1">
-        <div className="flex-none p-4 border-b">
-          <input
-            type="text"
-            value={title}
-            onChange={e => onTitleChange(e.target.value)}
-            placeholder="请输入标题..."
-            className="w-full px-4 py-2 text-xl font-bold bg-transparent border-none outline-none"
-          />
-        </div>
-        <div className="flex flex-1 overflow-hidden">
-          <div className="flex-1 overflow-auto">
-            <textarea
-              value={content}
-              onChange={e => onContentChange(e.target.value)}
-              placeholder="开始编写内容..."
-              className="w-full h-full p-4 bg-transparent border-none outline-none resize-none"
-            />
-          </div>
-          <div className="flex-1 border-l">
-            <Preview content={content} theme={theme} />
-          </div>
-        </div>
+    <div className="flex-1 grid grid-cols-2 h-full bg-base-100 mt-16">
+      {/* 左侧编辑区 */}
+      <div className="h-full flex flex-col border-r">
+        <input
+          type="text"
+          value={title || ''}
+          onChange={e => onTitleChange(e.target.value)}
+          placeholder="请输入标题..."
+          className="px-4 h-12 bg-transparent border-b outline-none"
+        />
+        <textarea
+          value={content || ''}
+          onChange={e => onContentChange(e.target.value)}
+          placeholder="开始编写内容..."
+          className="flex-1 p-4 bg-transparent outline-none resize-none overflow-auto"
+        />
+      </div>
+
+      {/* 右侧预览区 */}
+      <div className="h-full overflow-auto">
+        <Preview content={content} theme={theme} />
       </div>
     </div>
   )

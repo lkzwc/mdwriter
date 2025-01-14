@@ -370,7 +370,7 @@ export default function Preview({ content, theme = 'wechat-elegant' }) {
 
   if (!content?.trim()) {
     return (
-      <div className="flex-1 h-full overflow-auto bg-white">
+      <div className="h-full bg-white">
         <div className="p-4">
           <div className="text-gray-400">
             <p>开始编写内容后这里会显示预览效果...</p>
@@ -383,7 +383,7 @@ export default function Preview({ content, theme = 'wechat-elegant' }) {
   const themeClass = THEMES.find(t => t.id === theme)?.class || THEMES[0].class
 
   return (
-    <div className="flex-1 h-full overflow-auto bg-white">
+    <div className="h-full bg-white">
       <article className={`p-4 ${themeClass}`}>
         {error ? (
           <div className="text-red-500">

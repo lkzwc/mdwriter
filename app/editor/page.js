@@ -11,24 +11,32 @@ export default function EditorPage() {
   const [theme, setTheme] = useState('wechat-elegant')
   const { drafts, saveDraft, deleteDraft } = useDrafts()
 
+  const handleLoadDraft = (draft) => {
+    setTitle(draft.title)
+    setContent(draft.content)
+  }
+
+  const handleSaveDraft = () => {
+    saveDraft({ title, content })
+  }
+
   return (
-    <div className="min-h-screen pt-16">
-      <div className="flex h-[calc(100vh-4rem)]">
-        <Sidebar 
-          drafts={drafts}
-          onSaveDraft={() => saveDraft({ title, content })}
-          onDeleteDraft={deleteDraft}
-          theme={theme}
-          onThemeChange={setTheme}
-        />
-        <Editor
-          title={title}
-          content={content}
-          theme={theme}
-          onTitleChange={setTitle}
-          onContentChange={setContent}
-        />
-      </div>
+    <div className="fixed inset-0 flex">
+      <Sidebar 
+        drafts={drafts}
+        onSaveDraft={handleSaveDraft}
+        onDeleteDraft={deleteDraft}
+        onLoadDraft={handleLoadDraft}
+        theme={theme}
+        onThemeChange={setTheme}
+      />
+      <Editor
+        title={title}
+        content={content}
+        theme={theme}
+        onTitleChange={setTitle}
+        onContentChange={setContent}
+      />
     </div>
   )
 } 

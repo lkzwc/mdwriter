@@ -1,86 +1,152 @@
 'use client'
 
-import { Settings, Save, Send } from 'lucide-react'
+import { useState } from 'react'
+import { Save, Send, FileText, Settings, ChevronDown, Palette, Sparkles, Book, Layout, Briefcase, Upload } from 'lucide-react'
 
 const THEMES = [
-  { id: 'wechat-elegant', name: '微信典雅' },
-  { id: 'wechat-modern', name: '微信现代' },
-  { id: 'wechat-magazine', name: '微信杂志' },
-  { id: 'wechat-creative', name: '微信创意' },
-  { id: 'wechat-business', name: '微信商务' }
+  { id: 'wechat-elegant', name: '微信典雅', icon: Palette },
+  { id: 'wechat-modern', name: '微信现代', icon: Layout },
+  { id: 'wechat-magazine', name: '微信杂志', icon: Book },
+  { id: 'wechat-creative', name: '微信创意', icon: Sparkles },
+  { id: 'wechat-business', name: '微信商务', icon: Briefcase }
 ]
 
-export function Sidebar({ drafts = [], onSaveDraft, onDeleteDraft, theme, onThemeChange }) {
-  const handleThemeChange = (e) => {
-    e.target.blur() // 强制失去焦点，关闭下拉框
-    onThemeChange(e.target.value)
+export function Sidebar({ drafts, onSaveDraft, onDeleteDraft, onLoadDraft, theme, onThemeChange }) {
+  const [selectedDraft, setSelectedDraft] = useState(null)
+  const [isThemeOpen, setIsThemeOpen] = useState(false)
+
+  const handleDraftClick = (draft) => {
+    setSelectedDraft(draft)
+    document.getElementById('draft-modal').showModal()
   }
 
-  return (
-    <div className="w-64 flex-none border-r bg-gray-50">
-      <div className="h-full flex flex-col">
-        {/* 主题选择 */}
-        <div className="flex-none p-4 border-b">
-          <div className="form-control w-full">
-            <label className="label cursor-pointer">
-              <span className="label-text flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                主题样式
-              </span>
-            </label>
-            <select 
-              className="select select-bordered w-full"
-              value={theme}
-              onChange={handleThemeChange}
-            >
-              {THEMES.map(t => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+  const handleConfirmLoad = () => {
+    if (selectedDraft) {
+      onLoadDraft(selectedDraft)
+    }
+    setSelectedDraft(null)
+    document.getElementById('draft-modal').close()
+  }
 
-        {/* 草稿列表 */}
-        <div className="flex-1 overflow-auto">
-          <div className="p-4">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">草稿箱</h3>
-            {drafts.length === 0 ? (
-              <div className="text-sm text-gray-400">暂无草稿</div>
-            ) : (
-              <ul className="space-y-2">
-                {drafts.map((draft, index) => (
-                  <li key={index} className="flex items-center justify-between">
-                    <span className="text-sm truncate">{draft.title || '未命名草稿'}</span>
+  const handleCancelLoad = () => {
+    setSelectedDraft(null)
+    document.getElementById('draft-modal').close()
+  }
+
+  const currentTheme = THEMES.find(t => t.id === theme) || THEMES[0]
+  const CurrentThemeIcon = currentTheme.icon
+
+  return (
+    <div className="w-52 h-full flex flex-col bg-base-200 border-r my-14">
+      {/* 主题选择 */}
+      <div className="p-4 border-b">
+        <div className="w-full">
+          <label className="block pb-2">
+            <span className="font-medium flex items-center gap-2 text-gray-700 dark:text-gray-200">
+              <Settings size={16} />
+              主题样式
+            </span>
+          </label>
+          <div className="relative">
+            <button
+              onClick={() => setIsThemeOpen(!isThemeOpen)}
+              className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm text-left flex items-center justify-between hover:border-violet-500 dark:hover:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all group"
+            >
+              <span className="flex items-center gap-2">
+                <CurrentThemeIcon size={16} className="text-violet-500" />
+                <span className="text-gray-700 dark:text-gray-200 group-hover:text-violet-600 dark:group-hover:text-violet-400">{currentTheme.name}</span>
+              </span>
+              <ChevronDown size={16} className={`transition-transform duration-200 text-gray-400 group-hover:text-violet-500 ${isThemeOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {isThemeOpen && (
+              <div className="absolute w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-50 ring-1 ring-black ring-opacity-5">
+                {THEMES.map(t => {
+                  const ThemeIcon = t.icon
+                  return (
                     <button
-                      onClick={() => onDeleteDraft(draft.id)}
-                      className="text-red-500 hover:text-red-600"
+                      key={t.id}
+                      onClick={() => {
+                        onThemeChange(t.id)
+                        setIsThemeOpen(false)
+                      }}
+                      className={`w-full px-4 py-2.5 text-sm text-left flex items-center gap-2 transition-colors
+                        ${theme === t.id 
+                          ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400' 
+                          : 'text-gray-700 dark:text-gray-200 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-600 dark:hover:text-violet-400'
+                        }`}
                     >
-                      删除
+                      <ThemeIcon size={16} className={theme === t.id ? 'text-violet-500' : 'text-gray-400'} />
+                      {t.name}
                     </button>
-                  </li>
-                ))}
-              </ul>
+                  )
+                })}
+              </div>
             )}
           </div>
         </div>
+      </div>
 
-        {/* 底部按钮 */}
-        <div className="flex-none p-4 border-t space-y-2">
-          <button
-            onClick={onSaveDraft}
-            className="btn btn-block btn-primary"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            保存草稿
-          </button>
-          <button className="btn btn-block">
-            <Send className="w-4 h-4 mr-2" />
-            发布文章
-          </button>
+      {/* 草稿列表 */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-3">
+          <div className="flex items-center gap-2 text-sm font-medium text-base-content/70 mb-2">
+            <FileText size={14} />
+            文稿管理
+          </div>
+          <div className="space-y-2">
+            {drafts.map((draft, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-2 rounded bg-base-100 hover:bg-base-300 cursor-pointer"
+                onClick={() => handleDraftClick(draft)}
+              >
+                <div className="truncate flex-1">{draft.title || '无标题文档'}</div>
+                <button
+                  className="btn btn-ghost btn-xs"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteDraft(draft)
+                  }}
+                >
+                  删除
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* 底部按钮 */}
+      <div className="sticky bottom-0 border-t p-3 space-y-2 bg-base-200 shadow-[0_-1px_3px_rgba(0,0,0,0.1)]">
+        <button
+          className="btn btn-sm btn-block bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm"
+          onClick={onSaveDraft}
+        >
+          <Save size={14} className="mr-1" />
+          保存草稿
+        </button>
+        <button className="btn btn-sm btn-block bg-violet-500 hover:bg-violet-600 text-white border-none shadow-sm">
+          <Upload size={14} className="mr-1" />
+          推送草稿
+        </button>
+        <button className="btn btn-sm btn-block bg-violet-600 hover:bg-violet-700 text-white border-none shadow-sm">
+          <Send size={14} className="mr-1" />
+          发布文章
+        </button>
+      </div>
+
+      {/* 加载草稿确认对话框 */}
+      <dialog id="draft-modal" className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">加载草稿</h3>
+          <p className="py-4">确定要加载选中的草稿吗？当前未保存的内容将会丢失。</p>
+          <div className="modal-action">
+            <button className="btn" onClick={handleCancelLoad}>取消</button>
+            <button className="btn btn-primary" onClick={handleConfirmLoad}>确定</button>
+          </div>
+        </div>
+      </dialog>
     </div>
   )
 } 
