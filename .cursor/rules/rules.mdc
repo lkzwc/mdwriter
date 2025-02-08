@@ -1,0 +1,9 @@
+---
+description: 编写UI界面
+globs: *.jsx,*.js
+---
+
+# Your rule content
+
+- 优先使用daisyui里边的内置组件，如果满足不了再使用原生和tailwindcss去实现
+- 保持UI美观、现代化

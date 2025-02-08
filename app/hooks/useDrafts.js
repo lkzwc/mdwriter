@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 
 const DB_NAME = 'mdwriter'
@@ -10,6 +12,8 @@ export function useDrafts() {
 
   // 初始化数据库
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
     const request = indexedDB.open(DB_NAME, DB_VERSION)
 
     request.onerror = (event) => {
@@ -32,6 +36,7 @@ export function useDrafts() {
 
   // 加载所有草稿
   const loadDrafts = async (database) => {
+    if (!database) return
     const transaction = database.transaction([STORE_NAME], 'readonly')
     const store = transaction.objectStore(STORE_NAME)
     const request = store.getAll()
@@ -91,4 +96,4 @@ export function useDrafts() {
     saveDraft,
     deleteDraft
   }
-} 
+}

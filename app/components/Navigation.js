@@ -19,7 +19,7 @@ export function Navigation() {
 
   const menuItems = [
     { label: '写作', href: '/editor' },
-    { label: '配置', href: '/settings' },
+    { label: '配置', href: '/config' },
     { label: '操作说明', href: '/guide' },
   ];
 
