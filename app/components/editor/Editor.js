@@ -21,6 +21,7 @@ export function Editor({ content = "", onContentChange, onThemeChange }) {
   const [isDraftsOpen, setIsDraftsOpen] = useState(false);
   const [isThemePanelOpen, setIsThemePanelOpen] = useState(false);
   const [themeConfig, setThemeConfig] = useState(defaultTheme);
+  const [isScrolling, setIsScrolling] = useState(false);
   
   const editorRef = useRef(null);
   const previewRef = useRef(null);
@@ -31,6 +32,38 @@ export function Editor({ content = "", onContentChange, onThemeChange }) {
     setThemeConfig(newConfig);
     onThemeChange?.(newConfig);
   };
+
+  // 同步滚动
+  useEffect(() => {
+    const editor = editorRef.current;
+    const preview = previewRef.current;
+
+    if (!editor || !preview) return;
+
+    const handleScroll = (source) => {
+      if (isScrolling) return;
+      setIsScrolling(true);
+
+      const target = source === editor ? preview : editor;
+      const sourceElement = source === editor ? editor : preview;
+      
+      const percentage = sourceElement.scrollTop / (sourceElement.scrollHeight - sourceElement.clientHeight);
+      target.scrollTop = percentage * (target.scrollHeight - target.clientHeight);
+
+      setTimeout(() => setIsScrolling(false), 50);
+    };
+
+    const editorScrollHandler = () => handleScroll(editor);
+    const previewScrollHandler = () => handleScroll(preview);
+
+    editor.addEventListener('scroll', editorScrollHandler);
+    preview.addEventListener('scroll', previewScrollHandler);
+
+    return () => {
+      editor.removeEventListener('scroll', editorScrollHandler);
+      preview.removeEventListener('scroll', previewScrollHandler);
+    };
+  }, [isScrolling]);
 
   // 处理保存草稿
   const handleSaveDraft = async () => {
@@ -44,21 +77,23 @@ export function Editor({ content = "", onContentChange, onThemeChange }) {
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full rounded-sm">
       {/* 编辑区 */}
-      <div className={`flex-1 ${isThemePanelOpen ? 'basis-[calc(50%-140px)]' : 'basis-1/2'} transition-all duration-300`}>
+      <div className={`flex-1 ${isThemePanelOpen ? 'basis-[calc(50%-140px)]' : 'basis-1/2'} transition-all duration-300 overflow-hidden`}>
         <textarea
           ref={editorRef}
           value={content}
           onChange={(e) => onContentChange?.(e.target.value)}
-          className="w-full h-full resize-none border-none outline-none p-6"
+          className="w-full h-full resize-none border-none outline-none p-6 overflow-auto"
           placeholder="开始写作..."
         />
       </div>
 
       {/* 预览区 */}
-      <div className={`flex-1 border-l overflow-hidden ${isThemePanelOpen ? 'basis-[calc(50%-140px)]' : 'basis-1/2'} transition-all duration-300`}>
-        <Preview content={content} styles={generateThemeStyles(themeConfig)} />
+      <div className={`flex-1 border-l ${isThemePanelOpen ? 'basis-[calc(50%-140px)]' : 'basis-1/2'} transition-all duration-300`}>
+        <div ref={previewRef} className="h-full overflow-hidden">
+          <Preview content={content} styles={generateThemeStyles(themeConfig)} />
+        </div>
       </div>
 
       {/* 主题设置面板 */}
