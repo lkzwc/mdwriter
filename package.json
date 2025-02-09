@@ -9,9 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroui/react": "^2.6.14",
     "@mdx-js/mdx": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
-    "framer-motion": "^11.18.0",
+    "framer-motion": "^11.18.2",
     "lucide-react": "^0.471.1",
     "next": "15.1.4",
     "react": "^19.0.0",
@@ -21,7 +22,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/typography": "^0.5.16",
-    "daisyui": "^4.12.23",
     "eslint": "^9",
     "eslint-config-next": "15.1.4",
     "postcss": "^8",

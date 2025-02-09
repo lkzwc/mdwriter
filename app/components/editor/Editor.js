@@ -8,13 +8,33 @@ import {
   Send,
   X,
   FileText,
-  ChevronLeft,
+  Bot,
   ChevronRight,
   Trash2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemePanel } from "./ThemePanel";
 import { useDrafts } from "@/hooks/useDrafts";
+
+import {
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Input,
+  Select,
+  SelectItem,
+  Card,
+  Divider,
+  Alert,
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerFooter,
+} from "@heroui/react";
 
 // 动态导入 Preview 组件，禁用 SSR
 const Preview = dynamic(() => import("./PreviewNew"), {
@@ -80,267 +100,212 @@ export default function Editor({
   return (
     <div className="flex-1 flex h-full bg-base-100 mt-16 relative">
       {/* 编辑区 */}
-      <motion.div
-        className="h-full flex flex-col border-r"
-        animate={{
-          width: isThemePanelOpen ? "40%" : isDraftsOpen ? "40%" : "50%",
-        }}
-        transition={{ type: "spring", damping: 20, stiffness: 150 }}
-      >
+      <div className="w-1/2 h-full flex flex-col border-r">
         <textarea
           value={content || ""}
           onChange={(e) => onContentChange(e.target.value)}
           placeholder="开始编写内容..."
           className="flex-1 p-4 bg-transparent outline-none resize-none overflow-auto"
         />
-      </motion.div>
-
-      {/* 预览区 */}
-      <div className="flex-1 flex">
-        <motion.div
-          className="flex-1 h-full overflow-auto relative"
-          animate={{
-            width:
-              isThemePanelOpen || isDraftsOpen ? "calc(100% - 320px)" : "100%",
-          }}
-          transition={{ type: "spring", damping: 20, stiffness: 150 }}
-        >
-          <Preview content={content} theme={theme} config={themeConfig} />
-
-          {/* 操作按钮组 - 竖向排列 */}
-          <div className="absolute top-4 right-4 flex flex-col gap-2">
-            <button
-              onClick={onSaveDraft}
-              className="p-2 rounded-lg bg-white shadow-lg hover:shadow-xl transition-all text-gray-600 hover:text-violet-600 group relative"
-            >
-              <Save size={20} />
-              <span className="absolute left-0 -translate-x-full -translate-y-1/2 top-1/2 mr-2 px-2 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
-                保存草稿
-              </span>
-            </button>
-            <button
-              onClick={() => setIsPublishModalOpen(true)}
-              className="p-2 rounded-lg bg-violet-600 hover:bg-violet-700 shadow-lg hover:shadow-xl transition-all text-white group relative"
-            >
-              <Send size={20} />
-              <span className="absolute left-0 -translate-x-full -translate-y-1/2 top-1/2 mr-2 px-2 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
-                发布文章
-              </span>
-            </button>
-            <div className="w-full h-px bg-gray-200" />
-            <button
-              onClick={() => {
-                setIsDraftsOpen(!isDraftsOpen);
-                setIsThemePanelOpen(false);
-              }}
-              className={`p-2 rounded-lg bg-white shadow-lg hover:shadow-xl transition-all group relative
-                ${
-                  isDraftsOpen
-                    ? "bg-violet-50 text-violet-600"
-                    : "text-gray-600 hover:text-violet-600"
-                }`}
-            >
-              <FileText size={20} />
-              <span className="absolute left-0 -translate-x-full -translate-y-1/2 top-1/2 mr-2 px-2 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
-                草稿管理
-              </span>
-            </button>
-            <button
-              onClick={() => {
-                setIsThemePanelOpen(!isThemePanelOpen);
-                setIsDraftsOpen(false);
-              }}
-              className={`p-2 rounded-lg bg-white shadow-lg hover:shadow-xl transition-all group relative
-                ${
-                  isThemePanelOpen
-                    ? "bg-violet-50 text-violet-600"
-                    : "text-gray-600 hover:text-violet-600"
-                }`}
-            >
-              <Settings size={20} />
-              <span className="absolute left-0 -translate-x-full -translate-y-1/2 top-1/2 mr-2 px-2 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
-                主题设置
-              </span>
-            </button>
-          </div>
-        </motion.div>
-
-        {/* 草稿管理侧边栏 */}
-        <AnimatePresence>
-          {isDraftsOpen && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ type: "spring", damping: 20, stiffness: 150 }}
-              className="h-full border-l bg-white"
-            >
-              <div className="h-full flex flex-col">
-                <div className="p-4 border-b flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                    <FileText size={20} className="text-violet-500" />
-                    草稿管理
-                  </h3>
-                  <button
-                    onClick={() => setIsDraftsOpen(false)}
-                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <ChevronRight size={18} />
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-auto p-4">
-                  <div className="space-y-3">
-                    {drafts.map((draft) => (
-                      <div
-                        key={draft.id}
-                        className={`p-3 rounded-xl border transition-all cursor-pointer group
-                          ${
-                            currentDraftId === draft.id
-                              ? "border-violet-500 bg-violet-50/50"
-                              : "border-gray-200 hover:border-violet-500 hover:bg-violet-50/30"
-                          }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div
-                            className="flex-1 min-w-0"
-                            onClick={() => onLoadDraft(draft)}
-                          >
-                            <h4 className="font-medium text-gray-900 truncate">
-                              {draft.title || "无标题草稿"}
-                            </h4>
-                            <p className="text-sm text-gray-500 mt-1">
-                              {new Date(draft.date).toLocaleString()}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => {
-                              if (confirm("确定要删除这个草稿吗？")) {
-                                deleteDraft(draft.id);
-                              }
-                            }}
-                            className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-
-                    {drafts.length === 0 && (
-                      <div className="text-center py-8 text-gray-500">
-                        暂无草稿
-                      </div>
-                    )}
-
-                    {drafts.length >= 3 && (
-                      <div className="mt-4 p-3 bg-amber-50 text-amber-800 rounded-lg text-sm">
-                        草稿数量已达上限，请删除不需要的草稿
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* 主题设置面板 */}
-        <AnimatePresence>
-          {isThemePanelOpen && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ type: "spring", damping: 20, stiffness: 150 }}
-              className="h-full border-l bg-white"
-            >
-              <ThemePanel
-                theme={theme}
-                onThemeChange={onThemeChange}
-                config={themeConfig}
-                onConfigChange={setThemeConfig}
-                onClose={() => setIsThemePanelOpen(false)}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
+      {/* 预览区 */}
+      <div className="flex-1 h-full overflow-auto relative">
+        <Preview content={content} theme={theme} config={themeConfig} />
+
+        {/* 操作按钮组 */}
+        <div className="absolute top-4 right-4 flex flex-col gap-2">
+          <Button
+            variant="light"
+            size="lg"
+            isIconOnly
+            tooltip="AI一键改写"
+            onClick={onSaveDraft}
+          >
+            <Bot size={20} />
+          </Button>
+          <Button
+            variant="light"
+            size="lg"
+            isIconOnly
+            tooltip="保存草稿"
+            onClick={onSaveDraft}
+          >
+            <Save size={20} />
+          </Button>
+          <Button
+            variant="primary"
+            size="lg"
+            isIconOnly
+            tooltip="发布文章"
+            onClick={() => setIsPublishModalOpen(true)}
+          >
+            <Send size={20} />
+          </Button>
+          <Divider />
+          <Button
+            variant={isDraftsOpen ? "primary-light" : "light"}
+            size="lg"
+            isIconOnly
+            tooltip="草稿管理"
+            onClick={() => {
+              setIsDraftsOpen(true);
+              setIsThemePanelOpen(false);
+            }}
+          >
+            <FileText size={20} />
+          </Button>
+          <Button
+            variant={isThemePanelOpen ? "primary-light" : "light"}
+            size="lg"
+            isIconOnly
+            tooltip="主题设置"
+            onClick={() => {
+              setIsThemePanelOpen(true);
+              setIsDraftsOpen(false);
+            }}
+          >
+            <Settings size={20} />
+          </Button>
+        </div>
+      </div>
+
+      {/* 草稿管理抽屉 */}
+      <Drawer 
+        isOpen={isDraftsOpen} 
+        onOpenChange={setIsDraftsOpen}
+        placement="right"
+        size="md"
+      >
+          <DrawerContent className="fixed right-0 top-0 h-full w-[400px] bg-white shadow-xl">
+            <DrawerHeader className="px-6 py-4 border-b">
+              <div className="flex items-center gap-2">
+                <FileText size={20} className="text-primary" />
+                <span className="text-lg font-semibold">草稿管理</span>
+              </div>
+            </DrawerHeader>
+            <DrawerBody className="p-6">
+              <div className="space-y-3">
+                {drafts.map((draft) => (
+                  <Card
+                    key={draft.id}
+                    className={`cursor-pointer transition-all ${
+                      currentDraftId === draft.id
+                        ? "ring-2 ring-primary"
+                        : "hover:ring-1 hover:ring-primary/50"
+                    }`}
+                  >
+                    <div className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div
+                          className="flex-1 min-w-0"
+                          onClick={() => onLoadDraft(draft)}
+                        >
+                          <h4 className="font-medium text-gray-900 truncate">
+                            {draft.title || "无标题草稿"}
+                          </h4>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {new Date(draft.date).toLocaleString()}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          isIconOnly
+                          className="text-error opacity-0 group-hover:opacity-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm("确定要删除这个草稿吗？")) {
+                              deleteDraft(draft.id);
+                            }
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+
+                {drafts.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    暂无草稿
+                  </div>
+                )}
+
+                {drafts.length >= 3 && (
+                  <Alert variant="warning">
+                    草稿数量已达上限，请删除不需要的草稿
+                  </Alert>
+                )}
+              </div>
+            </DrawerBody>
+          </DrawerContent>
+      </Drawer>
+
+      {/* 主题设置抽屉 */}
+      <Drawer 
+        isOpen={isThemePanelOpen}
+        onOpenChange={setIsThemePanelOpen}
+        placement="right"
+        size="md"
+      >
+          <DrawerContent className="fixed right-0 top-0 h-full w-[400px] bg-white shadow-xl">
+            <ThemePanel
+              theme={theme}
+              onThemeChange={onThemeChange}
+              config={themeConfig}
+              onConfigChange={setThemeConfig}
+            />
+          </DrawerContent>
+      </Drawer>
+
       {/* 发布弹框 */}
-      {isPublishModalOpen && (
-        <dialog className="modal modal-open">
-          <div className="modal-box w-[480px] max-w-[90vw]">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">发布文章</h3>
-              <button 
-                onClick={() => setIsPublishModalOpen(false)}
-                className="btn btn-ghost btn-sm btn-circle"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
+      <Modal
+        isOpen={isPublishModalOpen}
+        onOpenChange={(open) => setIsPublishModalOpen(open)}
+      >
+        <ModalContent>
+          <ModalHeader>
+          发布文章
+          </ModalHeader>
+          <ModalBody>
             <div className="space-y-4">
-              <div className="form-control w-full">
-                <label className="label">
-                  <span className="label-text">文章标题</span>
-                </label>
-                <input
-                  type="text"
-                  value={publishForm.title}
-                  onChange={(e) =>
-                    setPublishForm((prev) => ({
-                      ...prev,
-                      title: e.target.value,
-                    }))
-                  }
-                  placeholder="请输入文章标题"
-                  className="input input-bordered w-full"
-                />
+              <div>
+                <Input label="标题" placeholder="晴输入你的文字标题" />
               </div>
-              <div className="form-control w-full">
-                <label className="label">
-                  <span className="label-text">选择公众号</span>
-                </label>
-                <select
-                  value={publishForm.account}
-                  onChange={(e) =>
+              <div>
+                <Select 
+                  label="选择公众号"
+                  placeholder="请选择公众号"
+                  selectedKeys={publishForm.account ? [publishForm.account] : []}
+                  onSelectionChange={(keys) => {
+                    const selectedKey = Array.from(keys)[0];
                     setPublishForm((prev) => ({
                       ...prev,
-                      account: e.target.value,
-                    }))
-                  }
-                  className="select select-bordered w-full"
+                      account: selectedKey,
+                    }));
+                  }}
                 >
-                  <option value="">请选择公众号</option>
                   {accounts.map((account) => (
-                    <option key={account.id} value={account.id}>
+                    <SelectItem key={account.id}>
                       {account.name}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
-
-            <div className="modal-action">
-              <button
-                onClick={() => handlePublish(true)}
-                className="btn btn-outline"
-              >
-                推送到草稿
-              </button>
-              <button
-                onClick={() => handlePublish(false)}
-                className="btn btn-primary"
-              >
-                直接发布
-              </button>
-            </div>
-          </div>
-          <div className="modal-backdrop" onClick={() => setIsPublishModalOpen(false)} />
-        </dialog>
-      )}
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="outline" onClick={() => handlePublish(true)}>
+              推送到草稿
+            </Button>
+            <Button variant="primary" onClick={() => handlePublish(false)}>
+              直接发布
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

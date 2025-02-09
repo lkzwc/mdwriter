@@ -1,5 +1,6 @@
 'use client'
 import { Pen, Eye, Sparkles, Users } from 'lucide-react';
+import {HeroUIProvider} from '@heroui/react'
 import { motion } from 'framer-motion';
 
 const fadeInUp = {
@@ -18,6 +19,7 @@ const stagger = {
 
 export default function Home() {
   return (
+    <HeroUIProvider>
     <main className="min-h-screen bg-gradient-to-b from-violet-50 via-white to-white dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
@@ -136,7 +138,9 @@ export default function Home() {
           </a>
         </motion.div>
       </section>
+
     </main>
+    </HeroUIProvider>
   );
 }
 
@@ -156,5 +160,6 @@ function FeatureCard({ icon, title, description }) {
         {description}
       </p>
     </motion.div>
+    
   );
 }

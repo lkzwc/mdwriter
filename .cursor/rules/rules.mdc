@@ -5,5 +5,17 @@ globs: *.jsx,*.js
 
 # Your rule content
 
-- 优先使用daisyui里边的内置组件，如果满足不了再使用原生和tailwindcss去实现
+- 优先使用@heroui里边的内置组件，如果满足不了再使用原生和tailwindcss去实现
 - 保持UI美观、现代化
+- 使用Demo如下 文档地址为：https://www.heroui.com/docs/guide/introduction
+
+// app/page.tsx
+import {Button} from '@heroui/button'; 
+
+export default function Page() {
+  return (
+    <div>
+      <Button>Click me</Button>
+    </div>
+  )
+}
