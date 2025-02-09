@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Editor from '@/components/editor/Editor'
+import {Editor} from '@/components/editor/Editor'
 
 export default function EditorPage() {
   const [content, setContent] = useState('')
