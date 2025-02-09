@@ -153,6 +153,66 @@ const presetThemes = {
       headingBackground: "#f9fafb",
     },
   },
+  cute: {
+    preset: "cute",
+    name: "可爱风格",
+    colors: {
+      text: "#4a5568",
+      heading: "#e84393",
+      link: "#3b82f6",
+      quote: "#718096",
+      border: "#fbb6ce",
+      background: "#ffffff",
+      headingBorder: "#fab1a0",
+      headingBackground: "#fff5f7",
+    },
+    bodyFont: "sans",
+    fontSize: 16,
+    lineHeight: 1.8,
+    paragraphSpacing: 1.6,
+    headingStyle: "decorated",
+    quoteStyle: "modern",
+  },
+  minimalist: {
+    preset: "minimalist",
+    name: "简约风格",
+    colors: {
+      text: "#2d3748",
+      heading: "#1a202c",
+      link: "#3182ce",
+      quote: "#718096",
+      border: "#e2e8f0",
+      background: "#ffffff",
+      headingBorder: "#4a5568",
+      headingBackground: "#f7fafc",
+    },
+    bodyFont: "sans",
+    fontSize: 16,
+    lineHeight: 1.8,
+    paragraphSpacing: 1.6,
+    headingStyle: "minimalist",
+    quoteStyle: "border",
+  },
+  cartoon: {
+    preset: "cartoon",
+    name: "卡通风格",
+    colors: {
+      text: "#4a5568",
+      heading: "#ed64a6",
+      link: "#4299e1",
+      quote: "#718096",
+      border: "#fbb6ce",
+      background: "#ffffff",
+      headingBorder: "#f687b3",
+      headingBackground: "#fef6fa",
+    },
+    bodyFont: "sans",
+    fontSize: 16,
+    lineHeight: 1.8,
+    paragraphSpacing: 1.6,
+    headingStyle: "cartoon",
+    quoteStyle: "modern",
+  },
 };
 
 // 默认主题
@@ -196,15 +256,16 @@ export function ThemePanel({ config = defaultTheme, onChange }) {
   const [activeTab, setActiveTab] = useState("basic");
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardBody className="p-4">
+    <div className="min-w-fit h-full bg-white p-2">
+      <Tabs  className="flex-1 justify-center">
+        <Tab key="basic" title="基础">
           <div className="space-y-4">
-            <div>
+            {/* 预设主题选择 */}
+            <div className="space-y-2">
               <Select
                 label="预设主题"
-                selectedKey={config.preset}
-                onSelectionChange={(key) => handleChange("preset", key)}
+                value={config.preset}
+                onChange={(value) => handleChange("preset", value)}
                 size="sm"
                 startContent={<Palette className="w-4 h-4" />}
               >
@@ -215,158 +276,203 @@ export function ThemePanel({ config = defaultTheme, onChange }) {
                 <SelectItem key="elegant" value="elegant">优雅</SelectItem>
                 <SelectItem key="modern" value="modern">现代</SelectItem>
                 <SelectItem key="minimal" value="minimal">简约</SelectItem>
+                <SelectItem key="cute" value="cute">可爱风格</SelectItem>
+                <SelectItem key="minimalist" value="minimalist">简约风格</SelectItem>
+                <SelectItem key="cartoon" value="cartoon">卡通风格</SelectItem>
               </Select>
             </div>
-            
-            <Tabs
-              aria-label="主题设置"
-              selectedKey={activeTab}
-              onSelectionChange={setActiveTab}
-              className="w-full"
-            >
-              <Tab key="basic" title="基础">
-                <div className="space-y-4 pt-2">
-                  <div>
-                    <Select
-                      label="正文字体"
-                      selectedKey={config.bodyFont}
-                      onSelectionChange={(key) => handleChange("bodyFont", key)}
-                      size="sm"
-                      startContent={<Type className="w-4 h-4" />}
-                    >
-                      <SelectItem key="serif" value="serif">衬线字体</SelectItem>
-                      <SelectItem key="sans" value="sans">无衬线字体</SelectItem>
-                    </Select>
-                  </div>
-                  <div>
-                    <div className="text-sm mb-2">字体大小</div>
-                    <Slider
-                      size="sm"
-                      step={1}
-                      maxValue={20}
-                      minValue={12}
-                      value={config.fontSize}
-                      onChange={(value) => handleChange("fontSize", value)}
-                    />
-                  </div>
-                  <div>
-                    <div className="text-sm mb-2">行高</div>
-                    <Slider
-                      size="sm"
-                      step={0.1}
-                      maxValue={2.5}
-                      minValue={1.2}
-                      value={config.lineHeight}
-                      onChange={(value) => handleChange("lineHeight", value)}
-                    />
-                  </div>
-                  <div>
-                    <div className="text-sm mb-2">段落间距</div>
-                    <Slider
-                      size="sm"
-                      step={0.1}
-                      maxValue={2.5}
-                      minValue={1}
-                      value={config.paragraphSpacing}
-                      onChange={(value) => handleChange("paragraphSpacing", value)}
-                    />
-                  </div>
-                </div>
-              </Tab>
-              <Tab key="heading" title="标题">
-                <div className="space-y-4 pt-2">
-                  <div>
-                    <div className="text-sm mb-2">标题样式</div>
-                    <RadioGroup
-                      value={config.headingStyle}
-                      onValueChange={(value) => handleChange("headingStyle", value)}
-                    >
-                      <Radio value="normal">默认</Radio>
-                      <Radio value="border">左边框</Radio>
-                      <Radio value="background">背景色</Radio>
-                      <Radio value="underline">下划线</Radio>
-                      <Radio value="simple">简约</Radio>
-                      <Radio value="mixed">混合风格</Radio>
-                    </RadioGroup>
-                  </div>
-                </div>
-              </Tab>
-              <Tab key="color" title="颜色">
-                <div className="space-y-4 pt-2">
-                  <div>
-                    <label className="text-sm">正文颜色</label>
-                    <input
-                      type="color"
-                      value={config.colors.text}
-                      onChange={(e) => handleChange("colors.text", e.target.value)}
-                      className="block w-full h-8 mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm">标题颜色</label>
-                    <input
-                      type="color"
-                      value={config.colors.heading}
-                      onChange={(e) => handleChange("colors.heading", e.target.value)}
-                      className="block w-full h-8 mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm">链接颜色</label>
-                    <input
-                      type="color"
-                      value={config.colors.link}
-                      onChange={(e) => handleChange("colors.link", e.target.value)}
-                      className="block w-full h-8 mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm">引用颜色</label>
-                    <input
-                      type="color"
-                      value={config.colors.quote}
-                      onChange={(e) => handleChange("colors.quote", e.target.value)}
-                      className="block w-full h-8 mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm">边框颜色</label>
-                    <input
-                      type="color"
-                      value={config.colors.border}
-                      onChange={(e) => handleChange("colors.border", e.target.value)}
-                      className="block w-full h-8 mt-1"
-                    />
-                  </div>
-                </div>
-              </Tab>
-            </Tabs>
 
-            <div>
-              <Select
-                label="引用样式"
-                selectedKey={config.quoteStyle}
-                onSelectionChange={(key) => handleChange("quoteStyle", key)}
+            {/* 字体设置 */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-700">字体设置</div>
+              <div className="space-y-3">
+                <RadioGroup
+                  value={config.bodyFont}
+                  onValueChange={(value) => handleChange("bodyFont", value)}
+                  size="sm"
+                  orientation="horizontal"
+                >
+                  <Radio value="sans">无衬线</Radio>
+                  <Radio value="serif">衬线</Radio>
+                </RadioGroup>
+              </div>
+            </div>
+
+            {/* 字号和行高 */}
+            <div className="grid grid-cols-2 gap-2">
+              <Slider
                 size="sm"
-                startContent={<Quote className="w-4 h-4" />}
-              >
-                <SelectItem key="border" value="border">左边框</SelectItem>
-                <SelectItem key="background" value="background">背景色</SelectItem>
-                <SelectItem key="modern" value="modern">现代</SelectItem>
-              </Select>
+                label="字号"
+                step={1}
+                maxValue={20}
+                minValue={12}
+                value={config.fontSize}
+                onChange={(value) => handleChange("fontSize", value)}
+              />
+              <Slider
+                size="sm"
+                label="行高"
+                step={0.1}
+                maxValue={2.5}
+                minValue={1.2}
+                value={config.lineHeight}
+                onChange={(value) => handleChange("lineHeight", value)}
+              />
             </div>
 
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleReset}
-              startContent={<RotateCcw className="w-4 h-4" />}
-            >
-              重置为预设值
-            </Button>
+            {/* 段落间距 */}
+            <div>
+              <Slider
+                size="sm"
+                label="段落间距"
+                step={0.1}
+                maxValue={2.5}
+                minValue={1}
+                value={config.paragraphSpacing}
+                onChange={(value) => handleChange("paragraphSpacing", value)}
+              />
+            </div>
           </div>
-        </CardBody>
-      </Card>
+        </Tab>
+
+        <Tab key="colors" title="颜色">
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-gray-500">正文颜色</label>
+                <input
+                  type="color"
+                  className="w-full h-8 rounded cursor-pointer"
+                  value={config.colors.text}
+                  onChange={(e) => handleChange("colors.text", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">标题颜色</label>
+                <input
+                  type="color"
+                  className="w-full h-8 rounded cursor-pointer"
+                  value={config.colors.heading}
+                  onChange={(e) => handleChange("colors.heading", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">链接颜色</label>
+                <input
+                  type="color"
+                  className="w-full h-8 rounded cursor-pointer"
+                  value={config.colors.link}
+                  onChange={(e) => handleChange("colors.link", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">引用颜色</label>
+                <input
+                  type="color"
+                  className="w-full h-8 rounded cursor-pointer"
+                  value={config.colors.quote}
+                  onChange={(e) => handleChange("colors.quote", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">边框颜色</label>
+                <input
+                  type="color"
+                  className="w-full h-8 rounded cursor-pointer"
+                  value={config.colors.border}
+                  onChange={(e) => handleChange("colors.border", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">背景颜色</label>
+                <input
+                  type="color"
+                  className="w-full h-8 rounded cursor-pointer"
+                  value={config.colors.background}
+                  onChange={(e) => handleChange("colors.background", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">标题边框</label>
+                <input
+                  type="color"
+                  className="w-full h-8 rounded cursor-pointer"
+                  value={config.colors.headingBorder}
+                  onChange={(e) => handleChange("colors.headingBorder", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">标题背景</label>
+                <input
+                  type="color"
+                  className="w-full h-8 rounded cursor-pointer"
+                  value={config.colors.headingBackground}
+                  onChange={(e) => handleChange("colors.headingBackground", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </Tab>
+
+        <Tab key="styles" title="样式">
+          <div className="space-y-4">
+            {/* 标题样式 */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Type className="w-4 h-4" />
+                标题样式
+              </div>
+              <div className="space-y-1">
+                <RadioGroup
+                  value={config.headingStyle}
+                  onValueChange={(value) => handleChange("headingStyle", value)}
+                  size="sm"
+                >
+                  <Radio value="normal">默认</Radio>
+                  <Radio value="border">左边框</Radio>
+                  <Radio value="background">背景色</Radio>
+                  <Radio value="underline">下划线</Radio>
+                  <Radio value="simple">简约</Radio>
+                  <Radio value="mixed">混合风格</Radio>
+                  <Radio value="decorated">装饰风格</Radio>
+                  <Radio value="minimalist">简约风格</Radio>
+                  <Radio value="cartoon">卡通风格</Radio>
+                </RadioGroup>
+              </div>
+            </div>
+
+            {/* 引用样式 */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Quote className="w-4 h-4" />
+                引用样式
+              </div>
+              <div className="space-y-1">
+                <RadioGroup
+                  value={config.quoteStyle}
+                  onValueChange={(value) => handleChange("quoteStyle", value)}
+                  size="sm"
+                >
+                  <Radio value="border">边框</Radio>
+                  <Radio value="background">背景色</Radio>
+                  <Radio value="modern">现代</Radio>
+                </RadioGroup>
+              </div>
+            </div>
+          </div>
+        </Tab>
+      </Tabs>
+      <div className="border-t">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleReset}
+          startContent={<RotateCcw className="w-4 h-4" />}
+          className="w-full"
+        >
+          重置为预设值
+        </Button>
+      </div>
     </div>
   );
 }

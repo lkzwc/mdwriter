@@ -91,13 +91,13 @@ export function Editor({ content = "", onContentChange }) {
           ref={editorRef}
           value={content}
           onChange={(e) => onContentChange?.(e.target.value)}
-          className="w-full h-full resize-none border-none outline-none p-6 overflow-auto"
+          className="w-full h-full resize-none border-none outline-none p-6 overflow-hidden"
           placeholder="开始写作..."
         />
       </div>
 
       {/* 预览区 */}
-      <div className={`flex-1 border-l ${isThemePanelOpen ? 'basis-[calc(50%-140px)]' : 'basis-1/2'} transition-all duration-300`}>
+      <div style={{scrollbarWidth:'thin'}} className={`flex-1 border-l overflow-y-auto ${isThemePanelOpen ? 'basis-[calc(50%-140px)]' : 'basis-1/2'} transition-all duration-300`}>
         <div ref={previewRef} className="h-full overflow-hidden">
           <Preview content={content} styles={generateThemeStyles(themeConfig)} />
         </div>
@@ -107,7 +107,7 @@ export function Editor({ content = "", onContentChange }) {
       <div className={`w-[280px] border-x border-gray-200 bg-white transition-all duration-300 ${
         isThemePanelOpen ? '' : 'w-0 opacity-0 overflow-hidden'
       }`}>
-        <div className="p-4 space-y-4">
+        <div className="p-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">主题设置</h2>
             <button
