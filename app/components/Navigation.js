@@ -21,6 +21,7 @@ export function Navigation() {
     { label: '写作', href: '/editor' },
     { label: '配置', href: '/config' },
     { label: '操作说明', href: '/guide' },
+    { label: '招教备考', href: '/study' },
   ];
 
   return (

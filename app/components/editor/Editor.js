@@ -10,9 +10,8 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerBody,
-  DrawerTrigger,
 } from "@heroui/react";
-import { Save, FileText, Send, Bot, Settings } from "lucide-react";
+import { Save, FileText, Send, Bot, Settings, Copy } from "lucide-react";
 import { useDrafts } from "@/hooks/useDrafts";
 
 export function Editor({ content = "", onContentChange }) {
@@ -83,6 +82,98 @@ export function Editor({ content = "", onContentChange }) {
     }
   };
 
+  // 复制到公众号
+  const handleCopyToWechat = () => {
+    const previewContent = previewRef.current;
+    if (!previewContent) return;
+
+    // 创建一个隐藏的富文本编辑器
+    const editor = document.createElement('div');
+    editor.contentEditable = true;
+    editor.style.cssText = 'position: fixed; left: -9999px;';
+    document.body.appendChild(editor);
+
+    // 获取预览内容
+    const content = previewContent.querySelector('.preview-content');
+    
+    // 处理样式的函数
+    const applyStyles = (element) => {
+      const style = window.getComputedStyle(element);
+      
+      // 基础样式
+      element.style.color = style.color;
+      element.style.backgroundColor = style.backgroundColor;
+      element.style.fontSize = style.fontSize;
+      element.style.fontWeight = style.fontWeight;
+      element.style.textAlign = style.textAlign;
+      element.style.lineHeight = style.lineHeight;
+      
+      // 处理标题
+      if (element.tagName.match(/^H[1-6]$/)) {
+        element.style.margin = '1em 0';
+        element.style.fontWeight = 'bold';
+        element.style.color = style.color;
+        element.style.backgroundColor = style.backgroundColor;
+      }
+      
+      // 处理引用块
+      if (element.tagName === 'BLOCKQUOTE') {
+        element.style.borderLeft = '4px solid #ccc';
+        element.style.paddingLeft = '1em';
+        element.style.margin = '1em 0';
+        element.style.color = style.color;
+        element.style.backgroundColor = style.backgroundColor;
+      }
+      
+      // 处理段落
+      if (element.tagName === 'P') {
+        element.style.margin = '1em 0';
+        element.style.lineHeight = '1.6';
+      }
+      
+      // 移除不需要的属性
+      element.removeAttribute('class');
+      element.removeAttribute('id');
+    };
+
+    // 克隆并处理内容
+    const clonedContent = content.cloneNode(true);
+    applyStyles(clonedContent);
+    
+    // 处理所有子元素
+    const elements = clonedContent.getElementsByTagName('*');
+    for (let el of elements) {
+      applyStyles(el);
+    }
+
+    // 将处理后的内容放入编辑器
+    editor.innerHTML = clonedContent.innerHTML;
+
+    try {
+      // 选择内容
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      // 执行复制
+      const successful = document.execCommand('copy');
+      if (successful) {
+        alert('已复制到剪贴板，可以直接粘贴到公众号');
+      } else {
+        alert('复制失败，请重试');
+      }
+    } catch (err) {
+      console.error('复制失败:', err);
+      alert('复制失败，请重试');
+    } finally {
+      // 清理
+      document.body.removeChild(editor);
+      window.getSelection().removeAllRanges();
+    }
+  };
+
   return (
     <div className="flex h-full rounded-sm">
       {/* 编辑区 */}
@@ -97,8 +188,8 @@ export function Editor({ content = "", onContentChange }) {
       </div>
 
       {/* 预览区 */}
-      <div style={{scrollbarWidth:'thin'}} className={`flex-1 border-l overflow-y-auto ${isThemePanelOpen ? 'basis-[calc(50%-140px)]' : 'basis-1/2'} transition-all duration-300`}>
-        <div ref={previewRef} className="h-full overflow-hidden">
+      <div  className={`flex-1 border-l ${isThemePanelOpen ? 'basis-[calc(50%-140px)]' : 'basis-1/2'} transition-all duration-300`}>
+        <div ref={previewRef} className="h-full overflow-y-auto overflow-x-hidden">
           <Preview content={content} styles={generateThemeStyles(themeConfig)} />
         </div>
       </div>
@@ -144,6 +235,11 @@ export function Editor({ content = "", onContentChange }) {
           icon={Bot}
           tooltip="AI 助手"
           onClick={() => setIsAIOpen(true)}
+        />
+        <ActionButton
+          icon={Copy}
+          tooltip="复制到公众号"
+          onClick={handleCopyToWechat}
         />
         <ActionButton
           id="theme-button"
