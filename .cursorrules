@@ -66,6 +66,7 @@
 ## UI和依赖库要求
 - 开发过程中优先使用已经安装的依赖库
 - 样式使用Tailwind CSS
+- 组件库使用heroui/react
 - 图标使用lucide-react
 - 动画使用framer-motion
 ## 数据存储要求

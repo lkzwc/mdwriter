@@ -1,172 +1,232 @@
-"use client";
+/** @jsxImportSource @emotion/react */
+'use client'
 
-import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
-import {
-  Settings,
-  Save,
-  Send,
-  X,
-  FileText,
-  Bot,
-  ChevronRight,
-  Trash2,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ThemePanel } from "./ThemePanel";
-import { useDrafts } from "@/hooks/useDrafts";
+import React, { useState, useEffect } from 'react'
+import { Preview } from './PreviewNew'
+import { ThemePanel } from './ThemePanel'
+import { Button, Tooltip, Drawer, DrawerContent, DrawerHeader, DrawerBody } from '@heroui/react'
+import { Save, FileText, Send, Bot } from 'lucide-react'
+import { useDrafts } from '@/hooks/useDrafts'
 
-import {
-  Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Input,
-  Select,
-  SelectItem,
-  Card,
-  Divider,
-  Alert,
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerBody,
-  DrawerFooter,
-} from "@heroui/react";
-
-// 动态导入 Preview 组件，禁用 SSR
-const Preview = dynamic(() => import("./PreviewNew"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-full text-gray-400">
-      加载预览组件...
-    </div>
-  ),
-});
-
-export default function Editor({
-  content,
-  theme,
-  onContentChange,
-  onThemeChange,
-  onSaveDraft,
-  currentDraftId,
-  onLoadDraft,
-}) {
-  const [mounted, setMounted] = useState(false);
-  const [isThemePanelOpen, setIsThemePanelOpen] = useState(false);
-  const [isDraftsOpen, setIsDraftsOpen] = useState(false);
-  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-  const { drafts, deleteDraft } = useDrafts();
-  const [publishForm, setPublishForm] = useState({
-    title: "",
-    account: "",
-  });
-
-  // 模拟公众号列表
-  const accounts = [
-    { id: "1", name: "测试公众号1" },
-    { id: "2", name: "测试公众号2" },
-  ];
-  const [themeConfig, setThemeConfig] = useState({
-    fontSize: 14,
-    lineHeight: 1.8,
-    fontFamily: "system-ui",
-    headingStyle: "elegant",
-    spacing: "适中",
-  });
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
+// 生成主题样式
+const generateThemeStyles = (config) => {
+  const fontFamily = {
+    sans: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    serif: 'Georgia, Cambria, "Times New Roman", Times, serif',
   }
 
-  const handlePublish = (isDraft = false) => {
-    console.log("发布内容:", {
-      ...publishForm,
-      content,
-      isDraft,
-    });
-    setIsPublishModalOpen(false);
-    // 重置表单
-    setPublishForm({ title: "", account: "" });
-  };
+  const width = {
+    narrow: '65ch',
+    normal: '80ch',
+    wide: '100ch',
+  }
+
+  const quoteStyles = {
+    border: {
+      borderLeft: '4px solid var(--quote-border-color)',
+      paddingLeft: '1rem',
+      fontStyle: 'italic',
+      color: 'var(--quote-color)',
+    },
+    background: {
+      backgroundColor: 'var(--quote-bg-color)',
+      padding: '1rem',
+      borderRadius: '0.5rem',
+      color: 'var(--quote-color)',
+    },
+    modern: {
+      borderLeft: '2px solid var(--link-color)',
+      backgroundColor: 'var(--quote-bg-color)',
+      padding: '1rem',
+      borderRadius: '0 0.5rem 0.5rem 0',
+      color: 'var(--quote-color)',
+    },
+  }
+
+  return {
+    article: {
+      '--text-color': config.colors.text,
+      '--heading-color': config.colors.heading,
+      '--link-color': config.colors.link,
+      '--quote-color': config.colors.quote,
+      '--quote-border-color': config.colors.border,
+      '--quote-bg-color': 'color-mix(in srgb, var(--quote-color) 10%, transparent)',
+      
+      fontFamily: fontFamily[config.bodyFont],
+      fontSize: `${config.fontSize}px`,
+      lineHeight: config.lineHeight,
+      maxWidth: width[config.contentWidth],
+      margin: '0 auto',
+      color: 'var(--text-color)',
+      
+      '& h1, & h2, & h3, & h4, & h5, & h6': {
+        color: 'var(--heading-color)',
+        marginBottom: '1rem',
+        fontWeight: '600',
+        lineHeight: 1.3,
+      },
+      
+      '& h1': { fontSize: '2em' },
+      '& h2': { fontSize: '1.5em' },
+      '& h3': { fontSize: '1.25em' },
+      '& h4': { fontSize: '1.1em' },
+      
+      '& p': {
+        marginBottom: `${config.paragraphSpacing}rem`,
+      },
+      
+      '& a': {
+        color: 'var(--link-color)',
+        textDecoration: 'none',
+        '&:hover': {
+          textDecoration: 'underline',
+        },
+      },
+      
+      '& blockquote': {
+        ...quoteStyles[config.quoteStyle],
+        margin: '1.5rem 0',
+      },
+      
+      '& img': {
+        maxWidth: '100%',
+        height: 'auto',
+        borderRadius: '0.5rem',
+      },
+      
+      '& ul, & ol': {
+        paddingLeft: '1.5rem',
+        marginBottom: `${config.paragraphSpacing}rem`,
+      },
+      
+      '& li': {
+        marginBottom: '0.5rem',
+      },
+      
+      '& hr': {
+        border: 'none',
+        height: '1px',
+        backgroundColor: 'var(--quote-border-color)',
+        margin: '2rem 0',
+      },
+    },
+  }
+}
+
+export default function Editor({ 
+  content = '', 
+  onContentChange,
+  onThemeChange,
+}) {
+  const [mounted, setMounted] = useState(false)
+  const [showThemePanel, setShowThemePanel] = useState(false)
+  const [isDraftsOpen, setIsDraftsOpen] = useState(false)
+  const { saveDraft, deleteDraft, loadDrafts } = useDrafts()
+  const [config, setConfig] = useState({
+    preset: 'elegant',
+    bodyFont: 'serif',
+    fontSize: 16,
+    lineHeight: 1.8,
+    contentWidth: 'normal',
+    paragraphSpacing: 1.6,
+    quoteStyle: 'border',
+    colors: {
+      text: '#1f2937',
+      heading: '#111827',
+      link: '#3b82f6',
+      quote: '#4b5563',
+      border: '#e5e7eb',
+    },
+  })
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const handleConfigChange = (newConfig) => {
+    setConfig(newConfig)
+    const styles = generateThemeStyles(newConfig)
+    onThemeChange?.(styles)
+  }
+
+  useEffect(() => {
+    handleConfigChange(config)
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
 
   return (
-    <div className="flex-1 flex h-full bg-base-100 mt-16 relative">
-      {/* 编辑区 */}
-      <div className="w-1/2 h-full flex flex-col border-r">
-        <textarea
-          value={content || ""}
-          onChange={(e) => onContentChange(e.target.value)}
-          placeholder="开始编写内容..."
-          className="flex-1 p-4 bg-transparent outline-none resize-none overflow-auto"
-        />
-      </div>
+    <div className="flex flex-col h-full">
+      <div className="flex flex-1 min-h-0">
+        {/* 编辑区域 */}
+        <div className="flex-1 min-w-0 h-full">
+          <textarea
+            className="w-full h-full p-4 resize-none outline-none"
+            value={content}
+            onChange={(e) => onContentChange?.(e.target.value)}
+            placeholder="开始编写..."
+          />
+        </div>
 
-      {/* 预览区 */}
-      <div className="flex-1 h-full overflow-auto relative">
-        <Preview content={content} theme={theme} config={themeConfig} />
+        {/* 预览区域 */}
+        <div className="flex-1 min-w-0 h-full overflow-auto border-l">
+          <Preview content={content} styles={generateThemeStyles(config)} />
+        </div>
 
-        {/* 操作按钮组 */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
-          <Button
-            variant="light"
-            size="lg"
-            isIconOnly
-            tooltip="AI一键改写"
-            onClick={onSaveDraft}
-          >
-            <Bot size={20} />
-          </Button>
-          <Button
-            variant="light"
-            size="lg"
-            isIconOnly
-            tooltip="保存草稿"
-            onClick={onSaveDraft}
-          >
-            <Save size={20} />
-          </Button>
-          <Button
-            variant="primary"
-            size="lg"
-            isIconOnly
-            tooltip="发布文章"
-            onClick={() => setIsPublishModalOpen(true)}
-          >
-            <Send size={20} />
-          </Button>
-          <Divider />
-          <Button
-            variant={isDraftsOpen ? "primary-light" : "light"}
-            size="lg"
-            isIconOnly
-            tooltip="草稿管理"
-            onClick={() => {
-              setIsDraftsOpen(true);
-              setIsThemePanelOpen(false);
-            }}
-          >
-            <FileText size={20} />
-          </Button>
-          <Button
-            variant={isThemePanelOpen ? "primary-light" : "light"}
-            size="lg"
-            isIconOnly
-            tooltip="主题设置"
-            onClick={() => {
-              setIsThemePanelOpen(true);
-              setIsDraftsOpen(false);
-            }}
-          >
-            <Settings size={20} />
-          </Button>
+        {/* 主题设置面板 */}
+        {showThemePanel && (
+          <div className="w-[280px] h-full border-l overflow-auto bg-gray-50">
+            <ThemePanel config={config} onChange={handleConfigChange} />
+          </div>
+        )}
+
+        {/* 操作按钮区 */}
+        <div className="w-[60px] h-full border-l flex flex-col items-center gap-2 py-4 bg-gray-50">
+          <Tooltip content="保存草稿" placement="left">
+            <Button
+              variant="light"
+              size="sm"
+              isIconOnly
+              onClick={() => saveDraft({ content })}
+            >
+              <Save className="w-4 h-4" />
+            </Button>
+          </Tooltip>
+
+          <Tooltip content="发布文章" placement="left">
+            <Button
+              variant="primary"
+              size="sm"
+              isIconOnly
+              onClick={() => {}}
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </Tooltip>
+
+          <Tooltip content="草稿管理" placement="left">
+            <Button
+              variant="light"
+              size="sm"
+              isIconOnly
+              onClick={() => setIsDraftsOpen(true)}
+            >
+              <FileText className="w-4 h-4" />
+            </Button>
+          </Tooltip>
+
+          <Tooltip content="主题设置" placement="left">
+            <Button
+              variant={showThemePanel ? "primary" : "light"}
+              size="sm"
+              isIconOnly
+              onClick={() => setShowThemePanel(!showThemePanel)}
+            >
+              <Bot className="w-4 h-4" />
+            </Button>
+          </Tooltip>
         </div>
       </div>
 
@@ -175,137 +235,14 @@ export default function Editor({
         isOpen={isDraftsOpen} 
         onOpenChange={setIsDraftsOpen}
         placement="right"
-        size="md"
       >
-          <DrawerContent className="fixed right-0 top-0 h-full w-[400px] bg-white shadow-xl">
-            <DrawerHeader className="px-6 py-4 border-b">
-              <div className="flex items-center gap-2">
-                <FileText size={20} className="text-primary" />
-                <span className="text-lg font-semibold">草稿管理</span>
-              </div>
-            </DrawerHeader>
-            <DrawerBody className="p-6">
-              <div className="space-y-3">
-                {drafts.map((draft) => (
-                  <Card
-                    key={draft.id}
-                    className={`cursor-pointer transition-all ${
-                      currentDraftId === draft.id
-                        ? "ring-2 ring-primary"
-                        : "hover:ring-1 hover:ring-primary/50"
-                    }`}
-                  >
-                    <div className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div
-                          className="flex-1 min-w-0"
-                          onClick={() => onLoadDraft(draft)}
-                        >
-                          <h4 className="font-medium text-gray-900 truncate">
-                            {draft.title || "无标题草稿"}
-                          </h4>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {new Date(draft.date).toLocaleString()}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          isIconOnly
-                          className="text-error opacity-0 group-hover:opacity-100"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm("确定要删除这个草稿吗？")) {
-                              deleteDraft(draft.id);
-                            }
-                          }}
-                        >
-                          <Trash2 size={14} />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-
-                {drafts.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    暂无草稿
-                  </div>
-                )}
-
-                {drafts.length >= 3 && (
-                  <Alert variant="warning">
-                    草稿数量已达上限，请删除不需要的草稿
-                  </Alert>
-                )}
-              </div>
-            </DrawerBody>
-          </DrawerContent>
+        <DrawerContent>
+          <DrawerHeader>草稿管理</DrawerHeader>
+          <DrawerBody>
+            {/* TODO: 草稿列表 */}
+          </DrawerBody>
+        </DrawerContent>
       </Drawer>
-
-      {/* 主题设置抽屉 */}
-      <Drawer 
-        isOpen={isThemePanelOpen}
-        onOpenChange={setIsThemePanelOpen}
-        placement="right"
-        size="md"
-      >
-          <DrawerContent className="fixed right-0 top-0 h-full w-[400px] bg-white shadow-xl">
-            <ThemePanel
-              theme={theme}
-              onThemeChange={onThemeChange}
-              config={themeConfig}
-              onConfigChange={setThemeConfig}
-            />
-          </DrawerContent>
-      </Drawer>
-
-      {/* 发布弹框 */}
-      <Modal
-        isOpen={isPublishModalOpen}
-        onOpenChange={(open) => setIsPublishModalOpen(open)}
-      >
-        <ModalContent>
-          <ModalHeader>
-          发布文章
-          </ModalHeader>
-          <ModalBody>
-            <div className="space-y-4">
-              <div>
-                <Input label="标题" placeholder="晴输入你的文字标题" />
-              </div>
-              <div>
-                <Select 
-                  label="选择公众号"
-                  placeholder="请选择公众号"
-                  selectedKeys={publishForm.account ? [publishForm.account] : []}
-                  onSelectionChange={(keys) => {
-                    const selectedKey = Array.from(keys)[0];
-                    setPublishForm((prev) => ({
-                      ...prev,
-                      account: selectedKey,
-                    }));
-                  }}
-                >
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id}>
-                      {account.name}
-                    </SelectItem>
-                  ))}
-                </Select>
-              </div>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="outline" onClick={() => handlePublish(true)}>
-              推送到草稿
-            </Button>
-            <Button variant="primary" onClick={() => handlePublish(false)}>
-              直接发布
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </div>
-  );
+  )
 }
