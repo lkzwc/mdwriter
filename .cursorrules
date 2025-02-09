@@ -66,7 +66,9 @@
 ## UI和依赖库要求
 - 开发过程中优先使用已经安装的依赖库
 - 样式使用Tailwind CSS
-- 组件库使用heroui/react
+- 组件库使用
+- 优先使用@heroui里边的内置组件，文档地址https://www.heroui.com/docs/guide/introduction， 如果满足不了再使用原生和tailwindcss去实现
+- 保持UI美观、现代化：
 - 图标使用lucide-react
 - 动画使用framer-motion
 ## 数据存储要求

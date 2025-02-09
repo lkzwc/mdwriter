@@ -15,7 +15,7 @@ import {
 import { Save, FileText, Send, Bot, Settings } from "lucide-react";
 import { useDrafts } from "@/hooks/useDrafts";
 
-export function Editor({ content = "", onContentChange, onThemeChange }) {
+export function Editor({ content = "", onContentChange }) {
   const [isPublishOpen, setIsPublishOpen] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [isDraftsOpen, setIsDraftsOpen] = useState(false);
@@ -30,7 +30,6 @@ export function Editor({ content = "", onContentChange, onThemeChange }) {
   // 处理主题变更
   const handleThemeChange = (newConfig) => {
     setThemeConfig(newConfig);
-    onThemeChange?.(newConfig);
   };
 
   // 同步滚动
@@ -64,6 +63,14 @@ export function Editor({ content = "", onContentChange, onThemeChange }) {
       preview.removeEventListener('scroll', previewScrollHandler);
     };
   }, [isScrolling]);
+
+  // 打开主题面板时，确保有默认主题
+  useEffect(() => {
+    if (isThemePanelOpen && (!themeConfig || !themeConfig.preset)) {
+      setThemeConfig(defaultTheme);
+      onThemeChange?.(defaultTheme);
+    }
+  }, [isThemePanelOpen]);
 
   // 处理保存草稿
   const handleSaveDraft = async () => {
@@ -191,31 +198,32 @@ export function Editor({ content = "", onContentChange, onThemeChange }) {
   );
 }
 
-// 生成主题样式
+// 生成默认主题样式
 const generateThemeStyles = (config) => {
+  if (!config) return {};
+
   const fontFamily = {
     serif: "'Noto Serif', 'Source Serif Pro', Georgia, Cambria, 'Times New Roman', Times, serif",
     sans: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
   };
 
-  const width = {
-    narrow: '680px',
-    normal: '780px',
-    wide: '880px',
-  };
-
   return {
-    "--text-color": config.colors.text,
-    "--heading-color": config.colors.heading,
-    "--link-color": config.colors.link,
-    "--quote-color": config.colors.quote,
-    "--quote-border-color": config.colors.border,
-    "--font-family": config.bodyFont === "serif" ? fontFamily.serif : fontFamily.sans,
-    "--font-size": `${config.fontSize}px`,
-    "--line-height": config.lineHeight,
-    "--content-width": width[config.contentWidth],
-    "--paragraph-spacing": `${config.paragraphSpacing}em`,
-    "--quote-style": config.quoteStyle,
+    colors: {
+      text: config.colors?.text || "#1f2937",
+      heading: config.colors?.heading || "#111827",
+      link: config.colors?.link || "#3b82f6",
+      quote: config.colors?.quote || "#4b5563",
+      border: config.colors?.border || "#e5e7eb",
+      background: config.colors?.background || "#ffffff",
+      headingBorder: config.colors?.headingBorder || "#3b82f6",
+      headingBackground: config.colors?.headingBackground || "#f3f4f6",
+    },
+    bodyFont: config.bodyFont || "sans",
+    fontSize: config.fontSize || 16,
+    lineHeight: config.lineHeight || 1.8,
+    paragraphSpacing: config.paragraphSpacing || 1.6,
+    headingStyle: config.headingStyle || "normal",
+    quoteStyle: config.quoteStyle || "border",
   };
 };
 

@@ -1,217 +1,308 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { serialize } from 'next-mdx-remote/serialize'
-import { MDXRemote } from 'next-mdx-remote'
-import remarkGfm from 'remark-gfm'
+import { serialize } from "next-mdx-remote/serialize";
+import { MDXRemote } from "next-mdx-remote";
+import { useState, useEffect } from "react";
+import remarkGfm from "remark-gfm";
 
-// 自定义组件
-const components = {
-  pre: ({ children, ...props }) => (
-    <pre {...props} className="overflow-auto p-4 bg-gray-50 rounded">
-      {children}
-    </pre>
-  ),
-  code: ({ children, className, ...props }) => (
-    <code className={`${className || ''} font-mono text-sm`} {...props}>
-      {children}
-    </code>
-  ),
-  img: (props) => (
-    <img {...props} className="max-w-full h-auto rounded" />
-  ),
-  p: (props) => (
-    <p {...props} className="mb-[var(--paragraph-spacing)] break-words" style={{ color: 'var(--text-color)' }} />
-  ),
-  h1: (props) => (
-    <h1 {...props} className="text-3xl font-bold mb-6" style={{ color: 'var(--heading-color)' }} />
-  ),
-  h2: (props) => (
-    <h2 {...props} className="text-2xl font-bold mb-4" style={{ color: 'var(--heading-color)' }} />
-  ),
-  h3: (props) => (
-    <h3 {...props} className="text-xl font-bold mb-3" style={{ color: 'var(--heading-color)' }} />
-  ),
-  ul: (props) => (
-    <ul {...props} className="list-disc pl-5 mb-[var(--paragraph-spacing)]" style={{ color: 'var(--text-color)' }} />
-  ),
-  ol: (props) => (
-    <ol {...props} className="list-decimal pl-5 mb-[var(--paragraph-spacing)]" style={{ color: 'var(--text-color)' }} />
-  ),
-  li: (props) => (
-    <li {...props} className="mb-2" style={{ color: 'var(--text-color)' }} />
-  ),
-  blockquote: (props) => {
-    const quoteStyles = {
-      border: "border-l-4 border-[var(--quote-border-color)] pl-4",
-      background: "bg-gray-50 p-4 rounded",
-      modern: "border-l-4 border-[var(--quote-border-color)] pl-4 bg-gray-50/50"
-    };
-
-    return (
-      <blockquote 
-        {...props} 
-        className={`${quoteStyles[props.quoteStyle] || quoteStyles.border} my-[var(--paragraph-spacing)]`}
-        style={{ color: 'var(--quote-color)' }}
-      />
-    );
-  },
-  a: (props) => (
-    <a {...props} className="text-[var(--link-color)] hover:underline" />
-  ),
-  div: (props) => {
-    // 处理文本对齐的 div
-    if (props.className?.includes('text-')) {
-      const alignClass = props.className.match(/text-(left|center|right)/)?.[0] || '';
-      return <div {...props} className={`${alignClass} mb-[var(--paragraph-spacing)]`} style={{ color: 'var(--text-color)' }} />;
-    }
-    return <div {...props} style={{ color: 'var(--text-color)' }} />;
-  },
-  table: (props) => (
-    <div className="overflow-x-auto my-[var(--paragraph-spacing)]">
-      <table {...props} className="min-w-full border-collapse table-auto" style={{ color: 'var(--text-color)' }} />
-    </div>
-  ),
-  thead: (props) => (
-    <thead {...props} className="bg-gray-50" />
-  ),
-  tbody: (props) => (
-    <tbody {...props} className="divide-y divide-gray-200" />
-  ),
-  tr: (props) => (
-    <tr {...props} className="hover:bg-gray-50" />
-  ),
-  th: (props) => (
-    <th {...props} className="px-4 py-2 text-left text-sm font-medium border border-gray-200" style={{ color: 'var(--heading-color)' }} />
-  ),
-  td: (props) => (
-    <td {...props} className="px-4 py-2 text-sm border border-gray-200" style={{ color: 'var(--text-color)' }} />
-  ),
-  input: (props) => {
-    if (props.type === 'checkbox') {
-      return (
-        <input
-          {...props}
-          className="form-checkbox h-4 w-4 text-[var(--link-color)] rounded border-gray-300 mr-2"
-          readOnly
-        />
-      );
-    }
-    return <input {...props} />;
-  }
-}
-
-async function processMarkdown(content) {
-  if (!content?.trim()) {
-    return { result: null }
-  }
-
-  try {
-    // 预处理内容
-    let processedContent = content
-      // 替换 center 标签
-      .replace(/<center>(.*?)<\/center>/gs, '<div className="text-center">$1</div>')
-      // 替换对齐语法，确保正确处理内部换行
-      .replace(/:::(left|center|right)\n([\s\S]*?)\n:::/g, (_, align, text) => {
-        // 移除开头和结尾的空行，但保留内部换行
-        const trimmedText = text.replace(/^\n+|\n+$/g, '')
-        return `<div className="text-${align}">${trimmedText}</div>`
-      })
-      // 处理连续的换行
-      .replace(/\n{3,}/g, '\n\n')
-
-    // 使用 next-mdx-remote 编译
-    const mdxSource = await serialize(processedContent, {
-      mdxOptions: {
-        remarkPlugins: [remarkGfm],
-        development: false
-      },
-      parseFrontmatter: true
-    })
-
-    return { result: mdxSource }
-  } catch (error) {
-    console.error('Markdown processing error:', error)
-    return { 
-      error: {
-        title: 'Markdown 语法错误',
-        message: '请检查：\n' +
-          '• 标题使用 # 号标记（1-6个）\n' +
-          '• 列表使用 - 或 1. 标记\n' +
-          '• 代码块使用三个反引号包裹\n' +
-          '• 图片和链接的括号要成对\n' +
-          '• 对齐语法使用 :::center 包裹内容\n' +
-          '• 居中使用 <div className="text-center">内容</div>\n' +
-          '• 表格语法：使用 | 分隔列，使用 - 分隔表头'
-      }
-    }
-  }
-}
-
-export function Preview({ content, styles }) {
+export function Preview({ content, styles = {} }) {
   const [mdxSource, setMdxSource] = useState(null);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function compile() {
-      const result = await processMarkdown(content);
-      
-      if (!isMounted) return;
-      
-      if (result.error) {
-        setError(result.error);
-        setMdxSource(null);
-      } else {
-        setError(null);
-        setMdxSource(result.result);
+    const compile = async () => {
+      try {
+        const mdxSource = await serialize(content || "", {
+          mdxOptions: {
+            remarkPlugins: [remarkGfm],
+            development: false
+          }
+        });
+        setMdxSource(mdxSource);
+      } catch (error) {
+        console.error("Failed to compile markdown:", error);
       }
-    }
-
+    };
     compile();
-    return () => { isMounted = false };
   }, [content]);
 
-  if (!content?.trim()) {
-    return (
-      <div className="h-full bg-white">
-        <div className="p-4">
-          <div className="text-gray-400">
-            <p>开始编写内容后这里会显示预览效果...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const previewStyles = {
+    "--text-color": styles.colors?.text || "#1f2937",
+    "--heading-color": styles.colors?.heading || "#111827",
+    "--link-color": styles.colors?.link || "#3b82f6",
+    "--quote-color": styles.colors?.quote || "#4b5563",
+    "--quote-border-color": styles.colors?.border || "#e5e7eb",
+    "--background-color": styles.colors?.background || "#ffffff",
+    "--headingBorder": styles.colors?.headingBorder || "#3b82f6",
+    "--headingBackground": styles.colors?.headingBackground || "#f3f4f6",
+    "--font-family": styles.bodyFont === "serif"
+      ? "'Noto Serif', 'Source Serif Pro', Georgia, Cambria, 'Times New Roman', Times, serif"
+      : "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+    "--font-size": `${styles.fontSize || 16}px`,
+    "--line-height": styles.lineHeight || 1.8,
+    "--paragraph-spacing": `${styles.paragraphSpacing || 1.6}em`,
+  };
 
   return (
-    <div className="h-full bg-white">
-      <article 
-        className="preview-content"
-        style={{
-          ...styles,
-          fontFamily: 'var(--font-family)',
-          fontSize: 'var(--font-size)',
-          lineHeight: 'var(--line-height)',
-          maxWidth: 'var(--content-width)',
-          margin: '0 auto',
-          padding: '2rem',
-        }}
-      >
-        {error ? (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="text-red-600 font-medium mb-2">{error.title}</div>
-            <div className="text-gray-600 text-sm whitespace-pre-wrap">{error.message}</div>
-          </div>
-        ) : mdxSource ? (
-          <MDXRemote {...mdxSource} components={components} />
-        ) : (
-          <div className="text-gray-400">
-            正在渲染...
-          </div>
-        )}
-      </article>
+    <div
+      className="preview-content p-2"
+      style={{
+        ...previewStyles,
+        color: "var(--text-color)",
+        fontFamily: "var(--font-family)",
+        fontSize: "var(--font-size)",
+        lineHeight: "var(--line-height)",
+        backgroundColor: "var(--background-color)",
+      }}
+    >
+      <style jsx global>{`
+        .preview-content {
+          max-width: 100%;
+          overflow-wrap: break-word;
+        }
+        
+        .preview-content h1,
+        .preview-content h2,
+        .preview-content h3,
+        .preview-content h4,
+        .preview-content h5,
+        .preview-content h6 {
+          color: var(--heading-color);
+          font-weight: 600;
+          margin-top: calc(var(--paragraph-spacing) * 1.5);
+          margin-bottom: var(--paragraph-spacing);
+        }
+
+        /* 混合标题样式 */
+        ${styles.headingStyle === "mixed" ? `
+          .preview-content h1 {
+            text-align: center;
+            background-color: var(--headingBackground);
+            padding: 1em;
+            border-radius: 8px;
+            margin: 1.5em -0.5em;
+            border: 2px solid var(--headingBorder);
+          }
+          
+          .preview-content h2 {
+            border-bottom: 2px solid var(--headingBorder);
+            padding-bottom: 0.3em;
+          }
+          
+          .preview-content h3 {
+            border-left: 4px solid var(--headingBorder);
+            padding-left: 0.8em;
+            margin-left: -0.8em;
+          }
+          
+          .preview-content h4 {
+            position: relative;
+            padding-left: 1em;
+          }
+          
+          .preview-content h4::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.5em;
+            height: 0.5em;
+            background-color: var(--headingBorder);
+            border-radius: 50%;
+          }
+          
+          .preview-content h5 {
+            color: var(--headingBorder);
+          }
+          
+          .preview-content h6 {
+            font-style: italic;
+            color: var(--quote-color);
+          }
+        ` : styles.headingStyle === "border" ? `
+          .preview-content h1,
+          .preview-content h2,
+          .preview-content h3,
+          .preview-content h4,
+          .preview-content h5,
+          .preview-content h6 {
+            border-left: 4px solid var(--headingBorder);
+            padding-left: 0.5em;
+            margin-left: -0.5em;
+          }
+        ` : styles.headingStyle === "background" ? `
+          .preview-content h1,
+          .preview-content h2,
+          .preview-content h3,
+          .preview-content h4,
+          .preview-content h5,
+          .preview-content h6 {
+            background-color: var(--headingBackground);
+            padding: 0.5em;
+            border-radius: 4px;
+            margin-left: -0.5em;
+            margin-right: -0.5em;
+          }
+        ` : styles.headingStyle === "underline" ? `
+          .preview-content h1,
+          .preview-content h2,
+          .preview-content h3,
+          .preview-content h4,
+          .preview-content h5,
+          .preview-content h6 {
+            border-bottom: 2px solid var(--headingBorder);
+            padding-bottom: 0.2em;
+          }
+        ` : styles.headingStyle === "simple" ? `
+          .preview-content h1,
+          .preview-content h2,
+          .preview-content h3,
+          .preview-content h4,
+          .preview-content h5,
+          .preview-content h6 {
+            position: relative;
+          }
+          
+          .preview-content h1::after,
+          .preview-content h2::after,
+          .preview-content h3::after,
+          .preview-content h4::after,
+          .preview-content h5::after,
+          .preview-content h6::after {
+            content: '';
+            position: absolute;
+            bottom: -0.2em;
+            left: 0;
+            width: 2em;
+            height: 2px;
+            background-color: var(--headingBorder);
+          }
+        ` : ''}
+        
+        .preview-content h1 { font-size: 2em; }
+        .preview-content h2 { font-size: 1.5em; }
+        .preview-content h3 { font-size: 1.25em; }
+        .preview-content h4 { font-size: 1em; }
+        .preview-content h5 { font-size: 0.875em; }
+        .preview-content h6 { font-size: 0.85em; }
+        
+        .preview-content p {
+          margin-top: 0;
+          margin-bottom: var(--paragraph-spacing);
+        }
+        
+        .preview-content a {
+          color: var(--link-color);
+          text-decoration: none;
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+        
+        .preview-content blockquote {
+          margin: var(--paragraph-spacing) 0;
+          ${styles.quoteStyle === "border" ? `
+            border-left: 4px solid var(--quote-border-color);
+            padding-left: 1em;
+            color: var(--quote-color);
+          ` : styles.quoteStyle === "background" ? `
+            background-color: var(--quote-border-color);
+            padding: 1em;
+            border-radius: 4px;
+            color: var(--quote-color);
+          ` : styles.quoteStyle === "modern" ? `
+            border-left: 2px solid var(--quote-border-color);
+            background-color: color-mix(in srgb, var(--quote-border-color) 10%, transparent);
+            padding: 1em;
+            border-radius: 2px;
+            color: var(--quote-color);
+          ` : ''}
+        }
+        
+        .preview-content blockquote p {
+          margin: 0;
+        }
+        
+        .preview-content img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 4px;
+          margin: var(--paragraph-spacing) 0;
+        }
+        
+        .preview-content pre {
+          background-color: #1f2937;
+          color: #e5e7eb;
+          padding: 1em;
+          border-radius: 4px;
+          overflow-x: auto;
+          margin: var(--paragraph-spacing) 0;
+        }
+        
+        .preview-content code {
+          background-color: color-mix(in srgb, var(--text-color) 10%, transparent);
+          padding: 0.2em 0.4em;
+          border-radius: 4px;
+          font-size: 0.9em;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+        
+        .preview-content pre code {
+          background-color: transparent;
+          padding: 0;
+          border-radius: 0;
+          color: inherit;
+        }
+        
+        .preview-content ul,
+        .preview-content ol {
+          margin-top: var(--paragraph-spacing);
+          margin-bottom: var(--paragraph-spacing);
+          padding-left: 1.5em;
+        }
+        
+        .preview-content li {
+          margin-top: calc(var(--paragraph-spacing) * 0.3);
+          margin-bottom: calc(var(--paragraph-spacing) * 0.3);
+        }
+
+        /* Task List 样式 */
+        .preview-content input[type="checkbox"] {
+          margin-right: 0.5em;
+        }
+        
+        .preview-content table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: var(--paragraph-spacing) 0;
+          display: block;
+          overflow-x: auto;
+        }
+        
+        .preview-content th,
+        .preview-content td {
+          border: 1px solid var(--quote-border-color);
+          padding: 0.5em;
+        }
+        
+        .preview-content th {
+          background-color: color-mix(in srgb, var(--quote-border-color) 10%, transparent);
+          font-weight: 600;
+        }
+
+        /* 删除线 */
+        .preview-content del {
+          color: var(--quote-color);
+        }
+
+        /* 水平分割线 */
+        .preview-content hr {
+          border: none;
+          border-top: 1px solid var(--quote-border-color);
+          margin: var(--paragraph-spacing) 0;
+        }
+      `}</style>
+      {mdxSource ? <MDXRemote {...mdxSource} /> : null}
     </div>
   );
 }
