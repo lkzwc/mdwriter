@@ -137,11 +137,123 @@ export function getDailyPlans(markdown) {
   return dailyPlans;
 }
 
+// 解析概要计划内容
+export function parseSummaryContent(content) {
+  if (!content) return [];
+
+  const lines = content.split('\n');
+  const slots = [];
+  let currentSlot = null;
+  let currentTask = null;
+
+  lines.forEach(line => {
+    line = line.trim();
+    if (!line) return;
+
+    // 匹配标题（数字+点开头）
+    const titleMatch = line.match(/^(\d+)\.\s+(.+)$/);
+    if (titleMatch) {
+      if (currentSlot) {
+        slots.push(currentSlot);
+      }
+      currentSlot = {
+        title: line,
+        tasks: []
+      };
+      currentTask = null;
+      return;
+    }
+
+    // 匹配子标题（字母+点开头）
+    const subTitleMatch = line.match(/^[a-zA-Z]\.\s+(.+)$/);
+    if (subTitleMatch && currentSlot) {
+      currentTask = {
+        title: line,
+        items: [],
+        isTimePoint: false
+      };
+      currentSlot.tasks.push(currentTask);
+      return;
+    }
+
+    // 处理列表项（以 - 或 * 开头的行）
+    const listItemMatch = line.match(/^[-*]\s+(.+)$/);
+    if (listItemMatch) {
+      const content = listItemMatch[1];
+      if (currentTask) {
+        currentTask.items.push({
+          content,
+          isSubTask: true
+        });
+      } else if (currentSlot) {
+        if (!currentSlot.items) {
+          currentSlot.items = [];
+        }
+        currentSlot.items.push({
+          content,
+          isSubTask: false
+        });
+      }
+      return;
+    }
+
+    // 处理缩进的内容（可能是子项）
+    if (line.startsWith('  ') && currentTask) {
+      const content = line.trim();
+      if (content) {
+        currentTask.items.push({
+          content,
+          isSubTask: true
+        });
+      }
+    }
+  });
+
+  if (currentSlot) {
+    slots.push(currentSlot);
+  }
+
+  return slots;
+}
+
 // 获取概要计划
 export function getSummaryPlan(markdown) {
   if (!markdown) return {};
-  const data = parseMarkdownToObject(markdown);
-  return data.summaryPlan || {};
+
+  const lines = markdown.split('\n');
+  const plans = {};
+  let currentTitle = null;
+  let currentContent = [];
+  let isDaily = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
+    // 检查二级标题
+    const titleMatch = line.match(/^##\s+(.+)$/);
+    if (titleMatch) {
+      if (currentTitle && currentContent.length > 0 && !isDaily) {
+        plans[currentTitle] = parseSummaryContent(currentContent.join('\n'));
+      }
+      currentTitle = titleMatch[1];
+      currentContent = [];
+      isDaily = currentTitle === '每日学习计划（2小时为单位）';
+      continue;
+    }
+
+    // 如果不是每日计划，就收集内容
+    if (!isDaily) {
+      currentContent.push(line);
+    }
+  }
+
+  // 处理最后一个计划
+  if (currentTitle && currentContent.length > 0 && !isDaily) {
+    plans[currentTitle] = parseSummaryContent(currentContent.join('\n'));
+  }
+
+  return plans;
 }
 
 // 获取基本信息

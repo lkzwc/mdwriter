@@ -123,22 +123,81 @@ export default function StudyPlanDisplay() {
   };
 
   const renderSummaryPlan = () => {
+    const summaryPlan = getSummaryPlan(markdown);
+    if (!Object.keys(summaryPlan).length) {
+      return <div className="text-gray-500">暂无概要计划</div>;
+    }
+
+    const processLinks = (text) => {
+      if (!text || typeof text !== 'string') return '';
+      const linkRegex = /\[(.*?)\]\((.*?)\)/g;
+      return text.replace(linkRegex, '<a href="$2" target="_blank" class="text-blue-600 hover:underline">链接</a>');
+    };
+
     return (
-      <Card>
-        <CardHeader>
-          <h3 className="text-xl font-bold">概要计划</h3>
-        </CardHeader>
-        <CardBody>
-          <div className="prose max-w-none">
-            {Object.entries(summaryPlan).map(([title, content]) => (
-              <div key={title} className="mb-6">
-                <h4 className="text-lg font-semibold mb-2">{title}</h4>
-                <ReactMarkdown>{content}</ReactMarkdown>
+      <div className="space-y-8">
+        {Object.entries(summaryPlan).map(([title, content]) => (
+          <Card key={title} className="w-full">
+            <CardHeader>
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <h4 className="text-xl font-semibold text-gray-900">{title}</h4>
+                </div>
               </div>
-            ))}
-          </div>
-        </CardBody>
-      </Card>
+            </CardHeader>
+            <CardBody>
+              <div className="space-y-4">
+                {content.map((section, sectionIndex) => (
+                  <div key={sectionIndex}>
+                    {/* 显示章节标题 */}
+                    {section.title && (
+                      <div className="mb-2">
+                        <span className="text-sm font-bold text-gray-900">{section.title}</span>
+                      </div>
+                    )}
+
+                    {/* 显示章节直接子项 */}
+                    {section.items && section.items.map((item, itemIndex) => (
+                      <div 
+                        key={`item-${itemIndex}`} 
+                        className="flex items-start ml-4 mb-1"
+                      >
+                        <span className="mr-1.5 mt-0.5">•</span>
+                        <span className="text-sm text-gray-600" dangerouslySetInnerHTML={{
+                          __html: processLinks(typeof item === 'string' ? item : item.content)
+                        }} />
+                      </div>
+                    ))}
+
+                    {/* 显示任务列表 */}
+                    <div className="space-y-2 ml-4">
+                      {section.tasks && section.tasks.map((task, taskIndex) => (
+                        <div key={`task-${taskIndex}`} className="mb-2">
+                          <div className="mb-1">
+                            <span className="text-sm font-semibold text-gray-900">{task.title}</span>
+                          </div>
+                          
+                          {task.items && task.items.map((item, itemIndex) => (
+                            <div 
+                              key={`subtask-${itemIndex}`} 
+                              className="flex items-start ml-4 mb-1"
+                            >
+                              <span className="mr-1.5 mt-0.5">•</span>
+                              <span className="text-sm text-gray-600" dangerouslySetInnerHTML={{
+                                __html: processLinks(typeof item === 'string' ? item : item.content)
+                              }} />
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardBody>
+          </Card>
+        ))}
+      </div>
     );
   };
 
@@ -157,14 +216,11 @@ export default function StudyPlanDisplay() {
         return dateA - dateB;
       });
 
-    // 处理链接的辅助函数
     const processLinks = (text) => {
       if (!text || typeof text !== 'string') return '';
       const linkRegex = /\[(.*?)\]\((.*?)\)/g;
       return text.replace(linkRegex, '<a href="$2" target="_blank" class="text-blue-600 hover:underline">链接</a>');
     };
-
-    console.log("0000",sortedDailyPlans)
 
     return (
       <div className="space-y-8">
