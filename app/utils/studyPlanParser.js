@@ -176,14 +176,14 @@ export function parseDailyPlanContent(content) {
     line = line.trim();
     if (!line) return;
 
-    // 匹配时间段（例如：上午（2小时）：xxx）
-    const timeSlotMatch = line.match(/^(.+?)（(.+?)）：(.+)?$/);
+    // 匹配时间段（例如：上午时段（2小时）：考试大纲解析与复习规划）
+    const timeSlotMatch = line.match(/^[-•]?\s*(.+?)(?:时段)?（(.+?)）：(.+)$/);
     if (timeSlotMatch) {
       if (currentTimeSlot) {
         timeSlots.push(currentTimeSlot);
       }
       currentTimeSlot = {
-        title: `${timeSlotMatch[1]}（${timeSlotMatch[2]}）`,
+        title: `${timeSlotMatch[1]}时段（${timeSlotMatch[2]}）：${timeSlotMatch[3]}`,
         description: timeSlotMatch[3] || '',
         tasks: []
       };
@@ -192,50 +192,59 @@ export function parseDailyPlanContent(content) {
     }
 
     // 匹配"第X个小时："
-    const hourMatch = line.match(/^第(.+?)个小时：?$/);
+    const hourMatch = line.match(/^[-•]?\s*第([一二三四五六七八九十\d]+)个小时：?(.*)$/);
     if (hourMatch && currentTimeSlot) {
       currentTask = {
-        title: line,
-        items: []
+        title: `第${hourMatch[1]}个小时${hourMatch[2] ? `：${hourMatch[2]}` : ''}`,
+        items: [],
+        isTimePoint: true
       };
       currentTimeSlot.tasks.push(currentTask);
       return;
     }
 
-    // 匹配"任务X："
-    const taskMatch = line.match(/^任务(\d+|[一二三四五六七八九十])：(.+?)(?:（(.+?)）)?$/);
+    // 匹配任务（例如：任务1：熟悉考试大纲（40分钟））
+    const taskMatch = line.match(/^[-•]?\s*任务(\d+|[一二三四五六七八九十])(?:个小时)?[：:]\s*(.+?)(?:\s*（(.+?)）)?$/);
     if (taskMatch && currentTimeSlot) {
       currentTask = {
-        title: `任务${taskMatch[1]}${taskMatch[3] ? `（${taskMatch[3]}）` : ''}`,
-        description: taskMatch[2],
-        items: []
+        title: `任务${taskMatch[1]}：${taskMatch[2]}${taskMatch[3] ? ` （${taskMatch[3]}）` : ''}`,
+        items: [],
+        isTimePoint: false
       };
       currentTimeSlot.tasks.push(currentTask);
       return;
     }
 
     // 处理列表项（以 - 或 • 开头的行）
-    if (line.startsWith('-') || line.startsWith('•')) {
-      const content = line.substring(1).trim();
+    const listItemMatch = line.match(/^[-•]\s+(.+)$/);
+    if (listItemMatch) {
+      const content = listItemMatch[1];
+      // 如果当前有任务上下文，就添加到任务的子项中
       if (currentTask) {
-        currentTask.items.push(content);
-      } else if (currentTimeSlot) {
+        currentTask.items.push({
+          content,
+          isSubTask: !currentTask.isTimePoint // 如果父任务不是时间点，这个就是子任务
+        });
+      }
+      // 否则添加到时间段的直接子项中
+      else if (currentTimeSlot) {
         if (!currentTimeSlot.items) {
           currentTimeSlot.items = [];
         }
-        currentTimeSlot.items.push(content);
+        currentTimeSlot.items.push({
+          content,
+          isSubTask: false
+        });
       }
       return;
     }
 
-    // 其他内容行
-    if (currentTask) {
-      currentTask.items.push(line);
-    } else if (currentTimeSlot) {
-      if (!currentTimeSlot.items) {
-        currentTimeSlot.items = [];
-      }
-      currentTimeSlot.items.push(line);
+    // 其他内容行（可能是任务的子项）
+    if (line.startsWith(' ') && currentTask) {
+      currentTask.items.push({
+        content: line.trim(),
+        isSubTask: !currentTask.isTimePoint
+      });
     }
   });
 

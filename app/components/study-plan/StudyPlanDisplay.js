@@ -159,111 +159,120 @@ export default function StudyPlanDisplay() {
 
     // 处理链接的辅助函数
     const processLinks = (text) => {
-      if (!text) return text;
-      const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+      if (!text || typeof text !== 'string') return '';
+      const linkRegex = /\[(.*?)\]\((.*?)\)/g;
       return text.replace(linkRegex, '<a href="$2" target="_blank" class="text-blue-600 hover:underline">链接</a>');
     };
+
+    console.log("0000",sortedDailyPlans)
 
     return (
       <div className="space-y-8">
         {sortedDailyPlans.map(({ date, timeSlots }) => (
           <div key={date} className="space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+            <div className="border-b border-gray-200 pb-2">
               <h3 className="text-2xl font-bold text-gray-900">{date}</h3>
-              {remainingTime && (
-                <div className="text-right">
-                  <div className="text-sm text-gray-500">距离考试还有</div>
-                  <div className="text-lg font-semibold text-blue-600">
-                    {remainingTime.days}天 {remainingTime.hours}时 {remainingTime.minutes}分 {remainingTime.seconds}秒
-                  </div>
-                </div>
-              )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {['上午', '下午', '晚上'].map(period => {
+              {['上午', '下午', '晚上'].map((period, periodIndex) => {
                 const periodSlots = timeSlots.filter(slot => 
                   slot.title.toLowerCase().includes(period.toLowerCase())
                 );
                 
+                const getPeriodStyle = (index) => {
+                  switch(index) {
+                    case 0: // 上午
+                      return {
+                        header: 'bg-gradient-to-r from-blue-50 to-blue-100',
+                        card: 'bg-blue-50/30'
+                      };
+                    case 1: // 下午
+                      return {
+                        header: 'bg-gradient-to-r from-amber-50 to-amber-100',
+                        card: 'bg-amber-50/30'
+                      };
+                    case 2: // 晚上
+                      return {
+                        header: 'bg-gradient-to-r from-purple-50 to-purple-100',
+                        card: 'bg-purple-50/30'
+                      };
+                  }
+                };
+
+                const periodStyle = getPeriodStyle(periodIndex);
+                
                 return (
-                  <Card key={period} className="h-full">
-                    <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-2">
-                      <h4 className="text-lg font-semibold text-blue-900">{period}</h4>
+                  <Card key={period} className={`h-full ${periodStyle.card}`}>
+                    <CardHeader className={`${periodStyle.header} px-3 py-1.5`}>
+                      <div>
+                        <div className="flex items-baseline gap-2">
+                          <h4 className="text-xl font-semibold text-gray-900">{period}</h4>
+                          【{periodSlots[0]?.title && (
+                            <span className="text-sm text-gray-600">
+                              {periodSlots[0].title.includes('：') 
+                                ? periodSlots[0].title.split('：')[1] 
+                                : periodSlots[0].title.split(':')[1]}
+                            </span>
+                          )}】
+                        </div>
+                      </div>
                     </CardHeader>
-                    <CardBody className="p-4">
+                    <CardBody className="p-3">
                       {periodSlots.length > 0 ? (
-                        periodSlots.map((slot, slotIndex) => (
-                          <div key={slotIndex} className="mb-4 last:mb-0">
-                            <div className="text-sm text-gray-600 mb-2">
-                              {slot.title}
-                              {slot.description && (
-                                <span className="ml-2" dangerouslySetInnerHTML={{
-                                  __html: processLinks(slot.description)
-                                }} />
-                              )}
-                            </div>
-                            
-                            {slot.items && (
-                              <div className="space-y-2 mb-3">
-                                {slot.items.map((item, itemIndex) => (
-                                  <div 
-                                    key={itemIndex} 
-                                    className="text-sm text-gray-600 ml-4"
-                                    dangerouslySetInnerHTML={{
-                                      __html: `• ${processLinks(item)}`
-                                    }}
-                                  />
-                                ))}
-                              </div>
-                            )}
-                            
-                            {slot.tasks.map((task, taskIndex) => {
-                              const isFirstHour = task.title.includes('第1个小时');
-                              const isTask = task.title.includes('任务');
-                              
-                              return (
-                                <div
-                                  key={taskIndex}
-                                  className={classNames(
-                                    'ml-4 mb-3 p-3 rounded-lg',
-                                    isFirstHour ? 'bg-green-50' : '',
-                                    isTask ? 'bg-yellow-50' : ''
-                                  )}
+                        <div className="space-y-1">
+                          {periodSlots.map((slot, slotIndex) => (
+
+                            <div key={slotIndex}>
+                              {/* 先显示非任务的普通项目 */}
+                              {slot.items && slot.items.map((item, itemIndex) => (
+                                <div 
+                                  key={itemIndex} 
+                                  className="flex items-start mb-1"
                                 >
-                                  <div className={classNames(
-                                    'text-sm font-medium mb-2',
-                                    isFirstHour ? 'text-green-800' : '',
-                                    isTask ? 'text-yellow-800' : 'text-gray-900'
-                                  )}>
-                                    {task.title}
-                                    {task.description && (
-                                      <span 
-                                        className="text-gray-600 ml-2"
-                                        dangerouslySetInnerHTML={{
-                                          __html: processLinks(task.description)
-                                        }}
-                                      />
+                                  <span className="mr-1.5 mt-0.5">•</span>
+                                  <span className="text-sm text-gray-600" dangerouslySetInnerHTML={{
+                                    __html: processLinks(typeof item === 'string' ? item : item.content)
+                                  }} />
+                                </div>
+                              ))}
+                              
+                              {/* 然后显示任务及其子项目 */}
+                              {slot.tasks.map((task, taskIndex) => (
+                                <div key={taskIndex} className="mb-2">
+                                  <div className="mb-1">
+                                    {/* 分割标题和描述 */}
+                                    {task.title.includes('：') ? (
+                                      <>
+                                        <span className={`text-sm ${task.isTimePoint ? 'font-semibold' : 'font-bold'} text-gray-900`}>
+                                          {task.title.split('：')[0]}：
+                                        </span>
+                                        <span className="text-sm text-gray-900">
+                                          {task.title.split('：')[1]}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <span className={`text-sm ${task.isTimePoint ? 'font-semibold' : 'font-bold'} text-gray-900`}>
+                                        {task.title}
+                                      </span>
                                     )}
                                   </div>
                                   
-                                  {task.items && (
-                                    <div className="space-y-1">
-                                      {task.items.map((item, itemIndex) => (
-                                        <div 
-                                          key={itemIndex} 
-                                          className="text-sm text-gray-600"
-                                          dangerouslySetInnerHTML={{
-                                            __html: `• ${processLinks(item)}`
-                                          }}
-                                        />
-                                      ))}
+                                  {task.items && task.items.map((item, itemIndex) => (
+                                    <div 
+                                      key={itemIndex} 
+                                      className={`flex items-start ${task.isTimePoint ? 'ml-6' : 'ml-4'} mb-1`}
+                                    >
+                                      <span className="mr-1.5 mt-0.5">•</span>
+                                      <span className="text-sm text-gray-600" dangerouslySetInnerHTML={{
+                                        __html: processLinks(typeof item === 'string' ? item : item.content)
+                                      }} />
                                     </div>
-                                  )}
+                                  ))}
                                 </div>
-                              );
-                            })}
-                          </div>
-                        ))
+                              ))}
+                            </div>
+                          ))}
+                        </div>
                       ) : (
                         <div className="text-sm text-gray-500 italic">无安排</div>
                       )}
