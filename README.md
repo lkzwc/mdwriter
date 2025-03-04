@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+我要开发一个Markdwon微信公众号编辑器，将具体以下几个功能：
 
-## Getting Started
+# 首页
+Markdwon编辑器 Landing Page 
+- 美观好看，色彩现代化
 
-First, run the development server:
+# 编辑器
+Markdwon编辑器 Editor
+## 界面
+- 布局包括网站导航栏
+- 导航栏下边为内容区域，分左中右布局
+- 左侧为输入区、中间为预览区，设置面板，右侧为操作区
+  - 初始状态：[编辑区 50%][预览区 50%][操作区 50px]
+  - 打开主题面板后：[编辑区 自适应][预览区 自适应][设置面板 280px][操作区 50px]
+- 操作区域固定宽度50px 操作区按钮依次竖直排列
+- 输入区和草稿区域同步滚动
+### 复制
+- 操作区提供复制功能 点击之后可以复制预览区的内容
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 草稿
+- 操作区提供草稿功能 点击之后可以将当前的内容保存为草稿
+- 使用浏览器自带的indexDB 存储草稿
+- 最多存储三篇
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 草稿管理
+- 操作区提供草稿管理功能 点击之后可以查看草稿列表
+- 草稿列表可以删除草稿
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### 主题设置
+- 操作区提供主题设置功能 点击之后可以打开主题设置面板
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
